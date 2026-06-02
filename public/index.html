@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#E31837">
+  <title>CostcoList — Family Shopping Lists</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { display: flex; flex-direction: column; align-items: center; }
+    .page { width: 100%; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Costco<span>List</span></h1>
+  </header>
+
+  <div class="page">
+    <div class="home-header">
+      <div class="logo">Costco<span>List</span></div>
+      <p>Create a shopping list, share it with your family.</p>
+    </div>
+
+    <div class="card" style="margin-top:24px;">
+      <h2>Start a new list</h2>
+      <div class="field-group">
+        <label for="list-name">List name</label>
+        <input id="list-name" class="input" type="text" placeholder="e.g. June Costco Run" maxlength="100" autocomplete="off">
+      </div>
+      <button id="create-btn" class="btn btn-red" style="width:100%;">Create List</button>
+      <p class="error-msg" id="create-error"></p>
+    </div>
+
+    <div class="divider">or</div>
+
+    <div class="card">
+      <h2>Join an existing list</h2>
+      <div class="field-group">
+        <label for="join-code">6-letter code</label>
+        <div class="input-row">
+          <input id="join-code" class="input" type="text" placeholder="e.g. X7K2QP"
+            maxlength="6" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase; letter-spacing:3px; font-family:monospace; font-weight:700;">
+          <button id="join-btn" class="btn btn-blue">Go</button>
+        </div>
+      </div>
+      <p class="error-msg" id="join-error"></p>
+    </div>
+  </div>
+
+  <script src="/js/home.js"></script>
+</body>
+</html>

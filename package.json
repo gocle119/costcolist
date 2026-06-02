@@ -1,0 +1,8 @@
+{
+  "name": "costcolist",
+  "version": "1.0.0",
+  "description": "Costco shopping list with shareable short codes",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0"
+  }
+}
