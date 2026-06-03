@@ -127,11 +127,11 @@ function applyTheme(dark) {
   document.documentElement.setAttribute('data-theme', dark ? 'dark' : '');
   darkToggle.textContent = dark ? '☀️' : '🌙';
 }
-let isDark = localStorage.getItem('costcolist_dark') === '1';
+let isDark = localStorage.getItem('shop119_dark') === '1';
 applyTheme(isDark);
 darkToggle.addEventListener('click', () => {
   isDark = !isDark;
-  localStorage.setItem('costcolist_dark', isDark ? '1' : '0');
+  localStorage.setItem('shop119_dark', isDark ? '1' : '0');
   applyTheme(isDark);
 });
 
@@ -189,7 +189,7 @@ function showMain(data) {
   loadingState.style.display = 'none';
   mainState.style.display = 'block';
   fab.style.display = 'flex';
-  document.title = `${data.name} — CostcoList`;
+  document.title = `${data.name} — Shop119`;
   listNameHeader.textContent = data.name;
   listNameHeader.style.display = 'block';
   codeBadge.textContent = data.code;
@@ -201,7 +201,7 @@ function showMain(data) {
 
   // Save to Your lists on any visit — joined or created
   try {
-    const key = 'costcolist_mine';
+    const key = 'shop119_mine';
     const lists = JSON.parse(localStorage.getItem(key) || '[]');
     const exists = lists.find(l => l.code === data.code);
     if (!exists) {
@@ -636,7 +636,7 @@ shareBtn.addEventListener('click', openShare);
 
 function openShare() {
   if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
-    navigator.share({ title: listData ? listData.name : 'CostcoList', url: window.location.href }).catch(() => {});
+    navigator.share({ title: listData ? listData.name : 'Shop119', url: window.location.href }).catch(() => {});
   } else {
     shareOverlay.style.display = 'flex';
   }
@@ -658,9 +658,9 @@ window.copyListFromShare = async function () {
   closeShare();
   try {
     const data = await api('POST', `/api/lists/${listCode}/copy`);
-    const lists = JSON.parse(localStorage.getItem('costcolist_mine') || '[]');
+    const lists = JSON.parse(localStorage.getItem('shop119_mine') || '[]');
     lists.unshift({ code: data.code, name: data.name, createdAt: new Date().toISOString() });
-    localStorage.setItem('costcolist_mine', JSON.stringify(lists.slice(0, 20)));
+    localStorage.setItem('shop119_mine', JSON.stringify(lists.slice(0, 20)));
     window.location.href = `/list/${data.code}`;
   } catch (err) {
     setStatus('Could not copy list: ' + err.message);
@@ -672,9 +672,9 @@ window.archiveListFromShare = async function () {
   closeShare();
   try {
     await api('PATCH', `/api/lists/${listCode}/archive`);
-    const lists = JSON.parse(localStorage.getItem('costcolist_mine') || '[]')
+    const lists = JSON.parse(localStorage.getItem('shop119_mine') || '[]')
       .filter(l => l.code !== listCode);
-    localStorage.setItem('costcolist_mine', JSON.stringify(lists));
+    localStorage.setItem('shop119_mine', JSON.stringify(lists));
     window.location.href = '/';
   } catch (err) {
     setStatus('Could not archive list.');

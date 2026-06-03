@@ -4,11 +4,11 @@ function applyTheme(dark) {
   document.documentElement.setAttribute('data-theme', dark ? 'dark' : '');
   darkToggle.textContent = dark ? '☀️' : '🌙';
 }
-let isDark = localStorage.getItem('costcolist_dark') === '1';
+let isDark = localStorage.getItem('shop119_dark') === '1';
 applyTheme(isDark);
 darkToggle.addEventListener('click', () => {
   isDark = !isDark;
-  localStorage.setItem('costcolist_dark', isDark ? '1' : '0');
+  localStorage.setItem('shop119_dark', isDark ? '1' : '0');
   applyTheme(isDark);
 });
 
@@ -18,7 +18,7 @@ const today = new Date();
 listNameInput.value = today.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
 // ── My Lists (localStorage) ───────────────────────────────────────────────────
-const MY_LISTS_KEY = 'costcolist_mine';
+const MY_LISTS_KEY = 'shop119_mine';
 
 function getMyLists() {
   try { return JSON.parse(localStorage.getItem(MY_LISTS_KEY) || '[]'); } catch { return []; }

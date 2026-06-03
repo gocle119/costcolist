@@ -1,7 +1,7 @@
 {
-  "name": "CostcoList",
-  "short_name": "CostcoList",
-  "description": "Family Costco shopping lists with shareable codes",
+  "name": "Shop119",
+  "short_name": "Shop119",
+  "description": "Family shopping lists with shareable codes",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

@@ -1,4 +1,4 @@
-const CACHE = 'costcolist-v5';
+const CACHE = 'shop119-v1';
 const STATIC = ['/', '/index.html', '/list.html', '/manifest.json', '/icon.svg'];
 
 self.addEventListener('install', e => {
