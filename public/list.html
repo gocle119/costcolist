@@ -18,17 +18,34 @@
     </div>
     <div class="header-right">
       <div id="code-badge" class="code-badge" style="display:none;"></div>
-      <button id="clear-checked-btn" class="btn btn-ghost" style="display:none; font-size:0.8rem; padding:6px 10px;">Clear done</button>
-      <button id="select-mode-btn" class="btn btn-ghost" style="display:none; font-size:0.8rem; padding:6px 10px;">Select</button>
-      <button id="share-btn" class="btn btn-ghost" style="display:none;">Share</button>
-      <button class="dark-toggle" id="dark-toggle" title="Toggle dark mode">🌙</button>
+      <!-- Actions visible on wide screens -->
+      <div class="header-actions" id="header-actions">
+        <button id="clear-checked-btn" class="btn btn-ghost" style="display:none; font-size:0.8rem; padding:6px 10px;">Clear done</button>
+        <button id="select-mode-btn" class="btn btn-ghost" style="display:none; font-size:0.8rem; padding:6px 10px;">Select</button>
+        <button id="share-btn" class="btn btn-ghost" style="display:none;">Share</button>
+      </div>
+      <!-- Overflow menu for small screens -->
+      <button id="overflow-btn" style="display:none;" title="More actions">⋯</button>
+      <div class="overflow-dropdown" id="overflow-dropdown">
+        <button id="overflow-clear-btn" class="btn" style="display:none;">Clear done</button>
+        <button id="overflow-select-btn" class="btn" style="display:none;">Select</button>
+        <button id="overflow-share-btn" class="btn">Share</button>
+      </div>
+      <button class="dark-toggle always-visible" id="dark-toggle" title="Toggle dark mode">🌙</button>
     </div>
   </header>
 
+  <!-- Toast notifications -->
+  <div id="toast-container"></div>
+
   <div class="page">
-    <div id="loading-state" style="text-align:center; padding:60px 20px; color:var(--muted);">
-      <div class="spinner" style="border-color:rgba(0,0,0,0.15); border-top-color:var(--red); width:32px; height:32px; border-width:3px;"></div>
-      <p style="margin-top:12px;">Loading list…</p>
+    <!-- Skeleton loading -->
+    <div id="loading-state">
+      <div class="skeleton-card" style="height:20px; width:120px; margin-bottom:16px;"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card" style="height:60px;"></div>
+      <div class="skeleton-card" style="height:80px;"></div>
+      <div class="skeleton-card" style="height:60px;"></div>
     </div>
 
     <div id="error-state" style="display:none; text-align:center; padding:60px 20px;">
@@ -77,8 +94,6 @@
         </div>
         <p class="error-msg" id="add-error"></p>
       </div>
-
-      <div class="status-bar" id="status-bar"></div>
     </div>
   </div>
 

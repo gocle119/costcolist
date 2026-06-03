@@ -1,3 +1,15 @@
+// ── Toast notifications ───────────────────────────────────────────────────────
+function showToast(msg, type = 'info', duration = 3000) {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  container.appendChild(t);
+  requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
+  setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, duration);
+}
+
 // ── Dark mode ────────────────────────────────────────────────────────────────
 const darkToggle = document.getElementById('dark-toggle');
 function applyTheme(dark) {
@@ -75,7 +87,7 @@ async function copyList(code, name) {
     saveMyList(data.code, data.name);
     window.location.href = `/list/${data.code}`;
   } catch (err) {
-    alert('Could not copy list: ' + err.message);
+    showToast('Could not copy list: ' + err.message, 'error');
   }
 }
 
@@ -86,7 +98,7 @@ async function archiveList(code) {
     removeMyList(code);
     loadMyLists();
   } catch (err) {
-    alert('Could not archive list.');
+    showToast('Could not archive list.', 'error');
   }
 }
 

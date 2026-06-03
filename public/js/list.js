@@ -120,6 +120,26 @@ const deleteSelectedBtn  = document.getElementById('delete-selected-btn');
 const deleteSelectedLabel = document.getElementById('delete-selected-label');
 const cancelSelectBtn = document.getElementById('cancel-select-btn');
 const subtotalBar     = document.getElementById('subtotal-bar');
+const overflowBtn     = document.getElementById('overflow-btn');
+const overflowDropdown = document.getElementById('overflow-dropdown');
+const overflowClearBtn  = document.getElementById('overflow-clear-btn');
+const overflowSelectBtn = document.getElementById('overflow-select-btn');
+const overflowShareBtn  = document.getElementById('overflow-share-btn');
+
+// ── Toast notifications ────────────────────────────────────────────────────────
+function showToast(msg, type = 'info', duration = 3000) {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  container.appendChild(t);
+  requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
+  setTimeout(() => {
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 300);
+  }, duration);
+}
 
 // ── Dark mode ──────────────────────────────────────────────────────────────────
 const darkToggle = document.getElementById('dark-toggle');
@@ -142,6 +162,18 @@ function buildCategoryOptions(selectEl, selected) {
   ).join('');
 }
 buildCategoryOptions(addCategory, 'Other');
+
+// ── Overflow menu (small screens) ─────────────────────────────────────────────
+if (overflowBtn) {
+  overflowBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    overflowDropdown.classList.toggle('open');
+  });
+  document.addEventListener('click', () => overflowDropdown.classList.remove('open'));
+  if (overflowShareBtn) overflowShareBtn.addEventListener('click', () => { overflowDropdown.classList.remove('open'); openShare(); });
+  if (overflowClearBtn) overflowClearBtn.addEventListener('click', () => { overflowDropdown.classList.remove('open'); clearCheckedBtn.click(); });
+  if (overflowSelectBtn) overflowSelectBtn.addEventListener('click', () => { overflowDropdown.classList.remove('open'); enterSelectMode(); });
+}
 
 // ── Init ───────────────────────────────────────────────────────────────────────
 if (!listCode || listCode.length !== 6) {
@@ -196,6 +228,7 @@ function showMain(data) {
   codeBadge.style.display = 'inline-block';
   shareBtn.style.display = 'inline-flex';
   selectModeBtn.style.display = 'inline-flex';
+  if (overflowBtn) overflowBtn.style.display = '';
   document.getElementById('share-code-val').textContent = data.code;
   document.getElementById('share-url-val').textContent = window.location.href;
 
@@ -211,7 +244,7 @@ function showMain(data) {
   } catch {}
 }
 
-function setStatus(msg) { statusBar.textContent = msg; }
+function setStatus(msg) { if (msg) showToast(msg); }
 
 // ── Subtotal ───────────────────────────────────────────────────────────────────
 function updateSubtotal() {
@@ -230,6 +263,7 @@ function updateSubtotal() {
 function updateClearCheckedBtn() {
   const hasChecked = items.some(i => i.checked);
   clearCheckedBtn.style.display = hasChecked ? 'inline-flex' : 'none';
+  if (overflowClearBtn) overflowClearBtn.style.display = hasChecked ? '' : 'none';
 }
 
 // ── Render items ───────────────────────────────────────────────────────────────
@@ -356,6 +390,45 @@ function buildItemNode(item) {
     div.appendChild(actions);
   }
 
+  // Swipe gestures (touch only, not in select mode)
+  if (!selectMode) {
+    const hintRight = document.createElement('div');
+    hintRight.className = 'item-swipe-hint-right';
+    hintRight.textContent = '✓';
+    const hintLeft = document.createElement('div');
+    hintLeft.className = 'item-swipe-hint-left';
+    hintLeft.textContent = '🗑';
+    div.prepend(hintRight);
+    div.appendChild(hintLeft);
+
+    let swipeStartX, swipeStartY, isSwiping = false;
+    div.addEventListener('touchstart', e => {
+      swipeStartX = e.touches[0].clientX;
+      swipeStartY = e.touches[0].clientY;
+      isSwiping = false;
+    }, { passive: true });
+    div.addEventListener('touchmove', e => {
+      const dx = e.touches[0].clientX - swipeStartX;
+      const dy = e.touches[0].clientY - swipeStartY;
+      if (!isSwiping && Math.abs(dy) > Math.abs(dx)) return;
+      isSwiping = true;
+      const clamped = Math.max(-90, Math.min(90, dx));
+      div.style.transform = `translateX(${clamped}px)`;
+      div.style.transition = 'none';
+      div.classList.toggle('swipe-right', dx > 30);
+      div.classList.toggle('swipe-left', dx < -30);
+    }, { passive: true });
+    div.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - swipeStartX;
+      div.style.transition = 'transform 0.25s';
+      div.style.transform = '';
+      div.classList.remove('swipe-right', 'swipe-left');
+      if (!isSwiping) return;
+      if (dx > 65) toggleCheck(item);
+      else if (dx < -75) deleteItem(item, div);
+    });
+  }
+
   return div;
 }
 
@@ -386,7 +459,8 @@ async function toggleCheck(item) {
 // ── Delete item ────────────────────────────────────────────────────────────────
 async function deleteItem(item, node) {
   if (!confirm(`Delete "${item.name}"?`)) return;
-  node.style.opacity = '0.4';
+  node.classList.add('item-exiting');
+  await new Promise(r => setTimeout(r, 200));
   try {
     await api('DELETE', `/api/lists/${listCode}/items/delete`, { itemId: item.id });
     items = items.filter(i => i.id !== item.id);
@@ -395,8 +469,8 @@ async function deleteItem(item, node) {
     updateClearCheckedBtn();
     lastUpdatedAt = null;
   } catch {
-    node.style.opacity = '';
-    setStatus('Could not delete item. Try again.');
+    node.classList.remove('item-exiting');
+    showToast('Could not delete item. Try again.', 'error');
   }
 }
 
@@ -620,9 +694,13 @@ async function submitAddItem() {
     items.push(item);
     lastUpdatedAt = null;
     renderItems();
+    // Animate the newly added item
+    const newNode = itemsContainer.querySelector(`[data-item-id="${item.id}"]`);
+    if (newNode) { newNode.classList.add('item-entering'); setTimeout(() => newNode.classList.remove('item-entering'), 300); }
     updateSubtotal();
     updateClearCheckedBtn();
     closeAddForm();
+    showToast(`${item.name} added`, 'success', 1800);
   } catch (err) {
     addError.textContent = err.message;
   } finally {
@@ -650,8 +728,8 @@ window.copyText = function (type) {
     ? document.getElementById('share-code-val').textContent
     : document.getElementById('share-url-val').textContent;
   navigator.clipboard.writeText(text).then(() => {
-    setStatus('Copied!'); setTimeout(() => setStatus(''), 2000);
-  }).catch(() => setStatus('Could not copy — please copy manually.'));
+    showToast('Copied!', 'success', 2000);
+  }).catch(() => showToast('Could not copy — please copy manually.', 'error'));
 };
 
 window.copyListFromShare = async function () {
