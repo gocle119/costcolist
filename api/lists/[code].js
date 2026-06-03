@@ -11,6 +11,7 @@ module.exports = async (req, res) => {
     .from('lists')
     .select('*')
     .eq('code', code)
+    .eq('archived', false)
     .single();
 
   if (listError || !list) return res.status(404).json({ error: 'List not found' });

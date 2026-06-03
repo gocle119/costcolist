@@ -8,6 +8,7 @@
   --muted: #666666;
   --border: #DDDDDD;
   --checked-opacity: 0.45;
+  --shadow: rgba(0,0,0,0.07);
   --radius: 10px;
 }
 
@@ -456,3 +457,161 @@ header h1 span { color: rgba(255,255,255,0.7); font-weight: 400; }
   .overlay-backdrop { align-items: center; }
   .share-sheet { border-radius: 20px; max-width: 420px; }
 }
+
+/* ── Category section headers ── */
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px 4px;
+  margin-top: 10px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--red);
+}
+.category-header:first-child { margin-top: 0; }
+.category-header::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── Subtotal bar ── */
+.subtotal-bar {
+  position: fixed;
+  bottom: 92px;
+  right: 20px;
+  background: var(--blue);
+  color: #fff;
+  border-radius: 20px;
+  padding: 7px 16px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  box-shadow: 0 3px 12px rgba(0,93,170,0.4);
+  display: none;
+  z-index: 190;
+}
+.subtotal-bar.visible { display: block; }
+
+/* ── Multi-select mode ── */
+.item-card.selectable { cursor: pointer; }
+.item-card.selectable:hover { background: #f0f4ff; }
+.item-card.selected {
+  background: #e8f0fe;
+  border-left-color: var(--blue) !important;
+}
+.select-check {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+.item-card.selected .select-check {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: white;
+}
+.item-card.selected .select-check::after { content: '✓'; font-size: 12px; font-weight: 700; }
+
+#delete-selected-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--red);
+  color: #fff;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  z-index: 201;
+  box-shadow: 0 -3px 12px rgba(0,0,0,0.15);
+}
+#delete-selected-bar.visible { display: flex; }
+
+/* ── My Lists (home page) ── */
+.my-lists-section { margin-top: 4px; }
+.my-lists-section h2 { margin-bottom: 12px; }
+
+.my-list-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+.my-list-row:last-child { border-bottom: none; }
+
+.my-list-info { flex: 1; min-width: 0; }
+.my-list-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.my-list-date { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+.my-list-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+/* ── Dark mode ── */
+[data-theme="dark"] {
+  --bg: #121212;
+  --white: #1e1e1e;
+  --text: #eeeeee;
+  --muted: #aaaaaa;
+  --border: #333333;
+  --shadow: rgba(0,0,0,0.3);
+  --checked-opacity: 0.35;
+}
+[data-theme="dark"] .item-card.selectable:hover { background: #2a2a3a; }
+[data-theme="dark"] .item-card.selected { background: #1a2a4a; }
+[data-theme="dark"] .input { background: #2a2a2a; color: var(--text); }
+[data-theme="dark"] .input::placeholder { color: #666; }
+[data-theme="dark"] select.input { background: #2a2a2a; }
+[data-theme="dark"] .share-sheet { background: #1e1e1e; color: var(--text); }
+[data-theme="dark"] .share-value { background: #2a2a2a; border-color: #444; }
+[data-theme="dark"] .overlay-backdrop { background: rgba(0,0,0,0.7); }
+
+.dark-toggle {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.dark-toggle:hover { background: rgba(255,255,255,0.25); }
+
+/* ── Item number badge ── */
+.item-number-badge {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-family: 'Courier New', monospace;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+/* ── Price display ── */
+.item-price {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--blue);
+}
+[data-theme="dark"] .item-price { color: #6aabff; }

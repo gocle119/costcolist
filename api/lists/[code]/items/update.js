@@ -6,7 +6,7 @@ module.exports = async (req, res) => {
   if (req.method !== 'PATCH') return res.status(405).json({ error: 'Method not allowed' });
 
   const code = (req.query.code || '').toUpperCase();
-  const { itemId, name, quantity, notes, checked } = req.body || {};
+  const { itemId, name, quantity, notes, checked, item_number, price, category } = req.body || {};
 
   if (!itemId) return res.status(400).json({ error: 'itemId is required' });
 
@@ -32,6 +32,9 @@ module.exports = async (req, res) => {
   if (quantity !== undefined) updates.quantity = String(quantity).trim() || '1';
   if (notes !== undefined) updates.notes = notes.trim();
   if (checked !== undefined) updates.checked = Boolean(checked);
+  if (item_number !== undefined) updates.item_number = item_number.trim();
+  if (category !== undefined) updates.category = category;
+  if (price !== undefined) updates.price = (price === '' || price === null) ? null : parseFloat(price);
 
   const { data: item, error } = await supabase
     .from('items')

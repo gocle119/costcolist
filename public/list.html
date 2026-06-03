@@ -4,8 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#E31837">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>CostcoList</title>
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="manifest" href="/manifest.json">
 </head>
 <body>
   <header>
@@ -15,7 +18,10 @@
     </div>
     <div class="header-right">
       <div id="code-badge" class="code-badge" style="display:none;"></div>
+      <button id="clear-checked-btn" class="btn btn-ghost" style="display:none; font-size:0.8rem; padding:6px 10px;">Clear done</button>
+      <button id="select-mode-btn" class="btn btn-ghost" style="display:none; font-size:0.8rem; padding:6px 10px;">Select</button>
       <button id="share-btn" class="btn btn-ghost" style="display:none;">Share</button>
+      <button class="dark-toggle" id="dark-toggle" title="Toggle dark mode">🌙</button>
     </div>
   </header>
 
@@ -28,7 +34,7 @@
     <div id="error-state" style="display:none; text-align:center; padding:60px 20px;">
       <div style="font-size:2.5rem; margin-bottom:12px;">🛒</div>
       <h2 style="color:var(--red); margin-bottom:8px;">List not found</h2>
-      <p style="color:var(--muted); margin-bottom:24px;">This code doesn't match any list. Double-check and try again.</p>
+      <p style="color:var(--muted); margin-bottom:24px;">This code doesn't match any list. It may have been archived or the code is wrong.</p>
       <a href="/" class="btn btn-red">Go Home</a>
     </div>
 
@@ -41,14 +47,28 @@
           <label>Item name *</label>
           <input id="add-name" class="input" type="text" placeholder="e.g. Kirkland Olive Oil" maxlength="200" autocomplete="off">
         </div>
+        <div class="field-group">
+          <label>Category</label>
+          <select id="add-category" class="input"></select>
+        </div>
         <div class="input-row">
           <div class="field-group" style="flex:1;">
-            <label>Quantity</label>
+            <label>Qty</label>
             <input id="add-qty" class="input" type="text" placeholder="1" maxlength="30">
           </div>
+          <div class="field-group" style="flex:1;">
+            <label>Price ($)</label>
+            <input id="add-price" class="input" type="number" placeholder="0.00" min="0" step="0.01">
+          </div>
+        </div>
+        <div class="input-row">
           <div class="field-group" style="flex:2;">
-            <label>Notes (optional)</label>
-            <input id="add-notes" class="input" type="text" placeholder="e.g. the big jug" maxlength="200" autocomplete="off">
+            <label>Notes</label>
+            <input id="add-notes" class="input" type="text" placeholder="optional" maxlength="200" autocomplete="off">
+          </div>
+          <div class="field-group" style="flex:1;">
+            <label>Item #</label>
+            <input id="add-item-number" class="input" type="text" placeholder="1234567" maxlength="20">
           </div>
         </div>
         <div class="edit-actions">
@@ -62,7 +82,19 @@
     </div>
   </div>
 
-  <button id="fab" title="Add item">+</button>
+  <!-- Subtotal bar -->
+  <div class="subtotal-bar" id="subtotal-bar"></div>
+
+  <!-- Delete selected bar -->
+  <div id="delete-selected-bar">
+    <span id="delete-selected-label">0 selected</span>
+    <div style="display:flex; gap:10px;">
+      <button class="btn btn-sm" style="background:rgba(255,255,255,0.2); color:white;" id="cancel-select-btn">Cancel</button>
+      <button class="btn btn-sm" style="background:white; color:var(--red); font-weight:700;" id="delete-selected-btn">Delete selected</button>
+    </div>
+  </div>
+
+  <button id="fab" title="Add item" style="display:none;">+</button>
 
   <!-- Share overlay -->
   <div id="share-overlay" class="overlay-backdrop" style="display:none;">
@@ -79,10 +111,19 @@
         <button class="btn btn-sm btn-blue" onclick="copyText('url')">Copy</button>
       </div>
       <p style="font-size:0.82rem; color:var(--muted); margin-top:10px;">Anyone with the code or URL can view and edit this list.</p>
+      <div style="display:flex; gap:10px; margin-top:16px;">
+        <button class="btn btn-sm" style="flex:1; background:var(--bg); color:var(--text);" onclick="copyListFromShare()">Copy list</button>
+        <button class="btn btn-sm" style="flex:1; background:var(--bg); color:var(--red);" onclick="archiveListFromShare()">Archive list</button>
+      </div>
       <button class="btn btn-red share-close" onclick="closeShare()">Done</button>
     </div>
   </div>
 
   <script src="/js/list.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+  </script>
 </body>
 </html>
