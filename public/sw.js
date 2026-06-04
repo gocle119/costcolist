@@ -1,4 +1,4 @@
-const CACHE = 'shop119-v2';
+const CACHE = 'shop119-v3';
 const STATIC = ['/', '/index.html', '/list.html', '/manifest.json', '/icon.svg'];
 
 self.addEventListener('install', e => {

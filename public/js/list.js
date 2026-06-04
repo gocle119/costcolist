@@ -122,9 +122,11 @@ const cancelSelectBtn = document.getElementById('cancel-select-btn');
 const subtotalBar     = document.getElementById('subtotal-bar');
 const overflowBtn     = document.getElementById('overflow-btn');
 const overflowDropdown = document.getElementById('overflow-dropdown');
-const overflowClearBtn  = document.getElementById('overflow-clear-btn');
-const overflowSelectBtn = document.getElementById('overflow-select-btn');
-const overflowShareBtn  = document.getElementById('overflow-share-btn');
+const overflowClearBtn    = document.getElementById('overflow-clear-btn');
+const overflowSelectBtn   = document.getElementById('overflow-select-btn');
+const overflowShareBtn    = document.getElementById('overflow-share-btn');
+const overflowStaplesBtn  = document.getElementById('overflow-staples-btn');
+const loadStaplesBtn      = document.getElementById('load-staples-btn');
 
 // ── Toast notifications ────────────────────────────────────────────────────────
 function showToast(msg, type = 'info', duration = 3000) {
@@ -139,6 +141,43 @@ function showToast(msg, type = 'info', duration = 3000) {
     t.classList.remove('show');
     setTimeout(() => t.remove(), 300);
   }, duration);
+}
+
+// ── Staples helpers ────────────────────────────────────────────────────────────
+function getStaples() { try { return JSON.parse(localStorage.getItem('shop119_staples') || '[]'); } catch { return []; } }
+function isStaple(name) { return getStaples().some(s => s.name.toLowerCase() === name.toLowerCase()); }
+
+function toggleStaple(item) {
+  let staples = getStaples();
+  const idx = staples.findIndex(s => s.name.toLowerCase() === item.name.toLowerCase());
+  if (idx >= 0) {
+    staples.splice(idx, 1);
+    showToast(`${item.name} removed from staples`, 'info', 2000);
+  } else {
+    staples.unshift({ name: item.name, category: item.category || 'Other', quantity: item.quantity || '1', notes: item.notes || '', item_number: item.item_number || '' });
+    showToast(`${item.name} saved to staples ★`, 'success', 2000);
+  }
+  localStorage.setItem('shop119_staples', JSON.stringify(staples.slice(0, 50)));
+  renderItems();
+}
+
+async function loadStaplesToList() {
+  const staples = getStaples();
+  if (!staples.length) { showToast('No staples yet. Tap ★ on items to save them.', 'info', 3000); return; }
+  const existing = new Set(items.filter(i => !i.checked).map(i => i.name.toLowerCase()));
+  const toAdd = staples.filter(s => !existing.has(s.name.toLowerCase()));
+  if (!toAdd.length) { showToast('All your staples are already on this list.', 'info', 2500); return; }
+  showToast(`Adding ${toAdd.length} staple${toAdd.length !== 1 ? 's' : ''}…`, 'info', 2000);
+  const results = await Promise.allSettled(
+    toAdd.map(s => api('POST', `/api/lists/${listCode}/items/add`, { name: s.name, quantity: s.quantity, notes: s.notes, item_number: s.item_number, category: s.category }))
+  );
+  const added = results.filter(r => r.status === 'fulfilled').map(r => r.value);
+  items.push(...added);
+  lastUpdatedAt = null;
+  renderItems();
+  updateSubtotal();
+  updateClearCheckedBtn();
+  showToast(`${added.length} staple${added.length !== 1 ? 's' : ''} added`, 'success', 2500);
 }
 
 // ── Dark mode ──────────────────────────────────────────────────────────────────
@@ -170,9 +209,10 @@ if (overflowBtn) {
     overflowDropdown.classList.toggle('open');
   });
   document.addEventListener('click', () => overflowDropdown.classList.remove('open'));
-  if (overflowShareBtn) overflowShareBtn.addEventListener('click', () => { overflowDropdown.classList.remove('open'); openShare(); });
-  if (overflowClearBtn) overflowClearBtn.addEventListener('click', () => { overflowDropdown.classList.remove('open'); clearCheckedBtn.click(); });
-  if (overflowSelectBtn) overflowSelectBtn.addEventListener('click', () => { overflowDropdown.classList.remove('open'); enterSelectMode(); });
+  if (overflowShareBtn)   overflowShareBtn.addEventListener('click',   () => { overflowDropdown.classList.remove('open'); openShare(); });
+  if (overflowClearBtn)   overflowClearBtn.addEventListener('click',   () => { overflowDropdown.classList.remove('open'); clearCheckedBtn.click(); });
+  if (overflowSelectBtn)  overflowSelectBtn.addEventListener('click',  () => { overflowDropdown.classList.remove('open'); enterSelectMode(); });
+  if (overflowStaplesBtn) overflowStaplesBtn.addEventListener('click', () => { overflowDropdown.classList.remove('open'); loadStaplesToList(); });
 }
 
 // ── Init ───────────────────────────────────────────────────────────────────────
@@ -229,6 +269,10 @@ function showMain(data) {
   shareBtn.style.display = 'inline-flex';
   selectModeBtn.style.display = 'inline-flex';
   if (overflowBtn) overflowBtn.style.display = '';
+  // Show staples buttons if user has staples saved
+  const hasStaples = getStaples().length > 0;
+  if (loadStaplesBtn) loadStaplesBtn.style.display = hasStaples ? 'inline-flex' : 'none';
+  if (overflowStaplesBtn) overflowStaplesBtn.style.display = hasStaples ? '' : 'none';
   document.getElementById('share-code-val').textContent = data.code;
   document.getElementById('share-url-val').textContent = window.location.href;
 
@@ -386,7 +430,13 @@ function buildItemNode(item) {
     delBtn.textContent = '🗑️';
     delBtn.addEventListener('click', e => { e.stopPropagation(); deleteItem(item, div); });
 
-    actions.append(editBtn, delBtn);
+    const starBtn = document.createElement('button');
+    starBtn.className = `star-btn${isStaple(item.name) ? ' starred' : ''}`;
+    starBtn.title = isStaple(item.name) ? 'Remove from staples' : 'Save to staples';
+    starBtn.textContent = isStaple(item.name) ? '★' : '☆';
+    starBtn.addEventListener('click', e => { e.stopPropagation(); toggleStaple(item); });
+
+    actions.append(starBtn, editBtn, delBtn);
     div.appendChild(actions);
   }
 
@@ -652,6 +702,8 @@ addName.addEventListener('input', () => {
   if (!addCategoryUserSet) addCategory.value = detectCategory(addName.value);
 });
 addCategory.addEventListener('change', () => { addCategoryUserSet = true; });
+
+if (loadStaplesBtn) loadStaplesBtn.addEventListener('click', loadStaplesToList);
 
 addCancelBtn.addEventListener('click', closeAddForm);
 addSubmitBtn.addEventListener('click', submitAddItem);

@@ -38,6 +38,7 @@
           <input id="list-name" class="input" type="text" placeholder="e.g. June Costco Run" maxlength="100" autocomplete="off">
         </div>
         <button id="create-btn" class="btn btn-red" style="width:100%;">Create List</button>
+        <button id="create-from-staples-btn" class="btn btn-blue" style="width:100%; display:none; margin-top:8px;">★ Start from my staples</button>
         <p class="error-msg" id="create-error"></p>
       </div>
 
@@ -58,6 +59,14 @@
     <div class="card my-lists-section" id="my-lists-section" style="display:none; margin-top: var(--gap);">
       <h2>Your lists</h2>
       <div id="my-lists-container"></div>
+    </div>
+
+    <div class="card my-lists-section" id="staples-section" style="display:none; margin-top: var(--gap);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h2 style="margin-bottom:0;">My Staples</h2>
+        <button class="btn btn-sm" style="background:var(--bg); color:var(--muted); font-size:0.75rem;" onclick="clearAllStaples()">Clear all</button>
+      </div>
+      <div id="staples-container"></div>
     </div>
   </div>
 

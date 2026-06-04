@@ -107,6 +107,85 @@ window.archiveList = archiveList;
 
 loadMyLists();
 
+// ── Staples ───────────────────────────────────────────────────────────────────
+function getStaples() { try { return JSON.parse(localStorage.getItem('shop119_staples') || '[]'); } catch { return []; } }
+
+function escHtmlHome(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function loadStaplesSection() {
+  const staples = getStaples();
+  const section   = document.getElementById('staples-section');
+  const container = document.getElementById('staples-container');
+  const createBtn2 = document.getElementById('create-from-staples-btn');
+
+  if (createBtn2) createBtn2.style.display = staples.length ? 'inline-flex' : 'none';
+  if (!section || !container) return;
+
+  if (!staples.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  container.innerHTML = '';
+
+  staples.forEach((s, idx) => {
+    const row = document.createElement('div');
+    row.className = 'staple-row';
+    row.innerHTML = `
+      <span class="staple-name">${escHtmlHome(s.name)}</span>
+      <span class="staple-cat">${escHtmlHome(s.category || 'Other')}</span>
+      <button class="staple-remove" title="Remove" data-idx="${idx}">×</button>`;
+    row.querySelector('.staple-remove').addEventListener('click', () => removeStaple(idx));
+    container.appendChild(row);
+  });
+}
+
+function removeStaple(idx) {
+  const staples = getStaples();
+  staples.splice(idx, 1);
+  localStorage.setItem('shop119_staples', JSON.stringify(staples));
+  loadStaplesSection();
+}
+
+function clearAllStaples() {
+  if (!confirm('Remove all staples? You can re-add them by starring items on any list.')) return;
+  localStorage.removeItem('shop119_staples');
+  loadStaplesSection();
+}
+
+async function createFromStaples() {
+  const btn = document.getElementById('create-from-staples-btn');
+  const name = listNameInput.value.trim() || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    const res = await fetch('/api/lists/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
+    const list = await res.json();
+    if (!res.ok) throw new Error(list.error);
+    saveMyList(list.code, list.name);
+
+    const staples = getStaples();
+    await Promise.allSettled(
+      staples.map(s => fetch(`/api/lists/${list.code}/items/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: s.name, quantity: s.quantity, notes: s.notes, item_number: s.item_number, category: s.category }),
+      }))
+    );
+
+    window.location.href = `/list/${list.code}`;
+  } catch (err) {
+    showToast('Could not create list: ' + err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = '★ Start from my staples';
+  }
+}
+
+window.clearAllStaples = clearAllStaples;
+document.getElementById('create-from-staples-btn')?.addEventListener('click', createFromStaples);
+
+loadStaplesSection();
+
 // ── Create list ───────────────────────────────────────────────────────────────
 const createBtn = document.getElementById('create-btn');
 const createError = document.getElementById('create-error');
