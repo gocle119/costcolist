@@ -53,6 +53,15 @@ header h1 {
   white-space: nowrap;
 }
 
+.home-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 4px 14px 4px 0;
+  text-decoration: none;
+  color: inherit;
+}
+
 header h1 span { color: rgba(255,255,255,0.7); font-weight: 400; }
 
 .header-right {
@@ -86,8 +95,8 @@ header h1 span { color: rgba(255,255,255,0.7); font-weight: 400; }
   border: 1px solid rgba(255,255,255,0.3);
   color: white;
   border-radius: 50%;
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   font-size: 1.1rem;
   cursor: pointer;
   align-items: center;
@@ -124,7 +133,10 @@ header h1 span { color: rgba(255,255,255,0.7); font-weight: 400; }
 
 @media (max-width: 519px) {
   #overflow-btn { display: inline-flex; }
-  .header-actions > .btn:not(.always-visible) { display: none; }
+  /* !important needed: JS sets inline display styles on these buttons
+     (e.g. shareBtn.style.display = 'inline-flex'), which otherwise always
+     beat a plain class selector regardless of this media query. */
+  .header-actions > .btn:not(.always-visible) { display: none !important; }
   header { position: relative; }
 }
 
@@ -177,8 +189,8 @@ header h1 span { color: rgba(255,255,255,0.7); font-weight: 400; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 36px;
-  min-height: 36px;
+  min-width: 44px;
+  min-height: 44px;
   transition: background 0.15s;
   color: var(--muted);
   font-size: 1.1rem;
@@ -226,7 +238,7 @@ header h1 span { color: rgba(255,255,255,0.7); font-weight: 400; }
   padding: clamp(10px, 2.5vw, 13px) clamp(10px, 3vw, 14px);
   border: 1.5px solid var(--border);
   border-radius: clamp(6px, 1.5vw, 9px);
-  font-size: var(--font-base);
+  font-size: max(1rem, var(--font-base)); /* keep >=16px to avoid iOS Safari zoom-on-focus */
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
   background: var(--white);
@@ -336,6 +348,17 @@ header h1 span { color: rgba(255,255,255,0.7); font-weight: 400; }
   margin-top: 1px;
   transition: border-color 0.15s, background 0.15s;
   background: var(--white);
+  position: relative;
+}
+/* Expand the tap target to 44px without growing the visible circle */
+.item-check::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
 }
 .item-check:hover { border-color: var(--red); }
 .item-check.checked {
@@ -419,8 +442,8 @@ header h1 span { color: rgba(255,255,255,0.7); font-weight: 400; }
 /* ── FAB ── */
 #fab {
   position: fixed;
-  bottom: 24px;
-  right: 20px;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  right: calc(20px + env(safe-area-inset-right));
   width: 58px;
   height: 58px;
   border-radius: 50%;
@@ -559,8 +582,8 @@ header h1 span { color: rgba(255,255,255,0.7); font-weight: 400; }
 /* ── Subtotal bar ── */
 .subtotal-bar {
   position: fixed;
-  bottom: 92px;
-  right: 20px;
+  bottom: calc(92px + env(safe-area-inset-bottom));
+  right: calc(20px + env(safe-area-inset-right));
   background: var(--blue);
   color: #fff;
   border-radius: 20px;
@@ -608,7 +631,7 @@ header h1 span { color: rgba(255,255,255,0.7); font-weight: 400; }
   display: none;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 20px;
+  padding: 14px calc(20px + env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left));
   z-index: 201;
   box-shadow: 0 -3px 12px rgba(0,0,0,0.15);
 }
@@ -663,8 +686,8 @@ header h1 span { color: rgba(255,255,255,0.7); font-weight: 400; }
   border: 1px solid rgba(255,255,255,0.3);
   color: white;
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -712,8 +735,8 @@ header h1 span { color: rgba(255,255,255,0.7); font-weight: 400; }
 /* ── Toast notifications ── */
 #toast-container {
   position: fixed;
-  top: 72px;
-  right: 16px;
+  top: calc(72px + env(safe-area-inset-top));
+  right: calc(16px + env(safe-area-inset-right));
   z-index: 500;
   display: flex;
   flex-direction: column;
@@ -800,8 +823,8 @@ header h1 span { color: rgba(255,255,255,0.7); font-weight: 400; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 36px;
-  min-height: 36px;
+  min-width: 44px;
+  min-height: 44px;
   font-size: 1rem;
   transition: background 0.15s, transform 0.15s;
   color: var(--muted);
