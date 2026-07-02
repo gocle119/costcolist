@@ -24,9 +24,11 @@ module.exports = async (req, res) => {
   if (listError || !list) return res.status(404).json({ error: 'List not found' });
 
   const results = await Promise.all(
-    reorderedItems.map(it =>
-      supabase.from('items').update({ position: it.position }).eq('id', it.id).eq('list_id', list.id)
-    )
+    reorderedItems.map(it => {
+      const updates = { position: it.position };
+      if (it.category !== undefined) updates.category = it.category;
+      return supabase.from('items').update(updates).eq('id', it.id).eq('list_id', list.id);
+    })
   );
 
   const failed = results.find(r => r.error);

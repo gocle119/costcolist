@@ -505,6 +505,9 @@ function buildItemNode(item) {
 }
 
 // ── Drag-and-drop reorder (mouse + touch + pen via Pointer Events) ──────────────
+// Unchecked items can be dragged across category sections (recategorizing them);
+// checked items ("✓ In the cart") only reorder within that section — checking
+// items on/off stays a swipe/tap action, not a drag action.
 function attachDragHandle(handleEl, cardEl) {
   let drag = null;
 
@@ -512,18 +515,22 @@ function attachDragHandle(handleEl, cardEl) {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     e.preventDefault();
 
-    const sectionKey = cardEl.dataset.section;
-    const siblings = Array.from(itemsContainer.querySelectorAll('.item-card'))
-      .filter(el => el.dataset.section === sectionKey);
-    const startIndex = siblings.indexOf(cardEl);
-    if (startIndex === -1 || siblings.length < 2) return;
+    const startCategory = cardEl.dataset.section;
+    const pool = Array.from(itemsContainer.querySelectorAll('.item-card'))
+      .filter(el => startCategory === '__checked__'
+        ? el.dataset.section === '__checked__'
+        : el.dataset.section !== '__checked__');
+    const startIndex = pool.indexOf(cardEl);
+    if (startIndex === -1 || pool.length < 2) return;
 
+    const poolRects = pool.map(el => el.getBoundingClientRect());
     const gap = parseFloat(getComputedStyle(itemsContainer).rowGap) || 10;
     const step = cardEl.getBoundingClientRect().height + gap;
 
     drag = {
-      sectionKey, siblings, startIndex, step,
+      pool, poolRects, startIndex, step, startCategory,
       currentIndex: startIndex,
+      targetCategory: startCategory,
       startY: e.clientY,
     };
 
@@ -534,16 +541,28 @@ function attachDragHandle(handleEl, cardEl) {
 
   handleEl.addEventListener('pointermove', e => {
     if (!drag) return;
-    const { siblings, startIndex, step } = drag;
-    const minDelta = -startIndex * step;
-    const maxDelta = (siblings.length - 1 - startIndex) * step;
+    const { pool, poolRects, startIndex, step } = drag;
+    const minDelta = poolRects[0].top - poolRects[startIndex].top;
+    const maxDelta = poolRects[poolRects.length - 1].top - poolRects[startIndex].top;
     const deltaY = Math.max(minDelta, Math.min(maxDelta, e.clientY - drag.startY));
     cardEl.style.transform = `translateY(${deltaY}px)`;
 
-    const newIndex = Math.max(0, Math.min(siblings.length - 1, startIndex + Math.round(deltaY / step)));
+    // Closest-original-slot matching (not a uniform step) so category-header
+    // gaps between sections don't throw off the target index.
+    const currentCenter = poolRects[startIndex].top + deltaY + poolRects[startIndex].height / 2;
+    let newIndex = startIndex;
+    let minDist = Infinity;
+    poolRects.forEach((r, i) => {
+      const dist = Math.abs(currentCenter - (r.top + r.height / 2));
+      if (dist < minDist) { minDist = dist; newIndex = i; }
+    });
+
     if (newIndex !== drag.currentIndex) {
       drag.currentIndex = newIndex;
-      siblings.forEach((el, i) => {
+      // Whichever original slot we're now closest to determines the target category —
+      // unambiguous even when the two neighboring slots belong to different categories.
+      drag.targetCategory = pool[newIndex].dataset.section;
+      pool.forEach((el, i) => {
         if (el === cardEl) return;
         let shift = 0;
         if (startIndex < newIndex && i > startIndex && i <= newIndex) shift = -step;
@@ -559,18 +578,18 @@ function attachDragHandle(handleEl, cardEl) {
 
   function finishDrag(e, cancelled) {
     if (!drag) return;
-    const { siblings, startIndex, currentIndex, sectionKey } = drag;
+    const { pool, startIndex, currentIndex, startCategory, targetCategory } = drag;
     try { handleEl.releasePointerCapture(e.pointerId); } catch {}
     cardEl.classList.remove('dragging');
     cardEl.style.transition = '';
     cardEl.style.transform = '';
-    siblings.forEach(el => { el.style.transition = ''; el.style.transform = ''; });
+    pool.forEach(el => { el.style.transition = ''; el.style.transform = ''; });
 
     if (!cancelled && currentIndex !== startIndex) {
-      const order = siblings.map(el => el.dataset.itemId);
-      const [movedId] = order.splice(startIndex, 1);
-      order.splice(currentIndex, 0, movedId);
-      persistReorder(sectionKey, order); // clears isDragging itself once the save settles
+      const finalOrder = pool.slice();
+      finalOrder.splice(startIndex, 1);
+      finalOrder.splice(currentIndex, 0, cardEl);
+      persistReorder(finalOrder, cardEl.dataset.itemId, targetCategory, startCategory); // clears isDragging once the save settles
     } else {
       isDragging = false;
     }
@@ -578,13 +597,38 @@ function attachDragHandle(handleEl, cardEl) {
   }
 }
 
-async function persistReorder(sectionKey, orderedIds) {
+async function persistReorder(finalOrder, movedId, newCategory, oldCategory) {
   const changed = [];
-  orderedIds.forEach((id, idx) => {
-    // dataset.itemId is always a string; items[].id may not be, so compare loosely
+  const categoryChanged = newCategory !== oldCategory;
+
+  // Members of the new (or unchanged) category, in final drag order — includes the moved item.
+  const newCatIds = finalOrder
+    .filter(el => el.dataset.itemId === movedId || el.dataset.section === newCategory)
+    .map(el => el.dataset.itemId);
+  newCatIds.forEach((id, idx) => {
     const it = items.find(i => String(i.id) === String(id));
-    if (it && it.position !== idx) { it.position = idx; changed.push({ id: it.id, position: idx }); }
+    if (!it) return;
+    const isMoved = String(id) === String(movedId);
+    const needsCategory = isMoved && categoryChanged;
+    if (it.position !== idx || needsCategory) {
+      it.position = idx;
+      if (needsCategory) it.category = newCategory;
+      changed.push({ id: it.id, position: idx, ...(needsCategory ? { category: newCategory } : {}) });
+    }
   });
+
+  // Old category's remaining members (only when the item actually switched category):
+  // their relative order among themselves is unchanged, just renumbered to close the gap.
+  if (categoryChanged) {
+    const oldCatItems = items
+      .filter(i => String(i.id) !== String(movedId) && !i.checked &&
+        (CATEGORY_ORDER.includes(i.category) ? i.category : 'Other') === oldCategory)
+      .sort((a, b) => a.position - b.position);
+    oldCatItems.forEach((it, idx) => {
+      if (it.position !== idx) { it.position = idx; changed.push({ id: it.id, position: idx }); }
+    });
+  }
+
   if (!changed.length) { isDragging = false; return; }
   renderItems();
   try {
