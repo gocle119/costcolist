@@ -404,6 +404,44 @@ header h1 span { color: rgba(255,255,255,0.7); font-weight: 400; }
 
 .item-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
 
+/* ── Drag handle (reorder) ── */
+.drag-handle {
+  width: 36px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  cursor: grab;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  flex-shrink: 0;
+}
+.drag-handle::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow:
+    -5px -7px 0 0 currentColor,
+     5px -7px 0 0 currentColor,
+    -5px  0   0 0 currentColor,
+     5px  0   0 0 currentColor,
+    -5px  7px 0 0 currentColor,
+     5px  7px 0 0 currentColor;
+}
+.drag-handle:active { cursor: grabbing; }
+
+.item-card.dragging {
+  position: relative;
+  z-index: 50;
+  cursor: grabbing;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+  transition: none !important;
+}
+
 /* ── Inline edit form inside item ── */
 .item-edit-form {
   background: var(--white);

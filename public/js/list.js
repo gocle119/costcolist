@@ -2,29 +2,18 @@
 const CATEGORY_ORDER = [
   'Produce','Bakery','Deli','Meat & Seafood','Dairy',
   'Frozen','Pantry & Snacks','Beverages','Paper & Cleaning',
-  'Health & Beauty','Electronics','Appliances','Clothing',
-  'Home & Garden','Auto','Other'
+  'Health & Beauty','Baby & Kids','Pet Supplies',
+  'Electronics','Appliances','Clothing','Home & Garden',
+  'Toys & Games','Office & School','Sporting Goods & Outdoors',
+  'Seasonal & Party','Auto','Other'
 ];
 
 // ── Category auto-detection ────────────────────────────────────────────────────
-const CATEGORY_KEYWORDS = {
-  'Produce':          ['apple','orange','banana','grape','strawberry','blueberry','avocado','tomato','lettuce','spinach','kale','broccoli','cauliflower','carrot','celery','onion','garlic','pepper','mushroom','cucumber','zucchini','corn','lemon','lime','mango','pineapple','watermelon','melon','berry','salad','vegetable','veggie','fruit','herbs','cilantro','basil','parsley'],
-  'Bakery':           ['bread','bagel','muffin','croissant','cake','pie','pastry','cookie','brownie','roll','bun','tortilla','wrap','pita','sourdough','brioche','donut','danish','baguette'],
-  'Deli':             ['ham','deli','salami','pepperoni','prosciutto','pastrami','roast beef','swiss','manchego','hummus','dip'],
-  'Meat & Seafood':   ['beef','steak','ground','pork','lamb','sausage','hot dog','bacon','chicken','ribs','brisket','salmon','tuna','shrimp','tilapia','cod','halibut','crab','lobster','fish','seafood','scallop','oyster','clam','meat','wings','drumstick','turkey'],
-  'Dairy':            ['milk','butter','cream','yogurt','sour cream','cream cheese','cottage','egg','half and half','oat milk','almond milk','lactose','kefir','ghee'],
-  'Frozen':           ['frozen','ice cream','pizza','burrito','nugget','waffle','edamame','stir fry','pot pie','smoothie pack'],
-  'Pantry & Snacks':  ['oil','olive oil','rice','pasta','noodle','sauce','soup','broth','stock','canned','beans','lentil','flour','sugar','salt','spice','seasoning','ketchup','mustard','mayo','dressing','vinegar','syrup','honey','peanut butter','jam','jelly','cereal','oatmeal','granola','bar','chip','cracker','pretzel','popcorn','trail mix','nut','almond','cashew','walnut','peanut','chocolate','candy','snack'],
-  'Beverages':        ['water','juice','soda','coffee','tea','energy drink','sports drink','wine','beer','sparkling','electrolyte','kombucha','lemonade','gatorade','bodyarmor','creamer'],
-  'Paper & Cleaning': ['paper towel','toilet paper','tissue','napkin','trash bag','garbage bag','laundry','detergent','dish soap','dishwasher','wipe','sponge','bleach','cleaning','tide','downy','bounce','dryer','foil','plastic wrap','ziplock','ziploc'],
-  'Health & Beauty':  ['vitamin','supplement','medicine','shampoo','conditioner','body wash','lotion','sunscreen','toothpaste','toothbrush','razor','deodorant','ibuprofen','tylenol','advil','allergy','melatonin','fish oil','protein','collagen','moisturizer','floss'],
-  'Electronics':      ['tv','television','laptop','computer','tablet','ipad','phone','charger','cable','headphone','speaker','camera','printer','monitor','keyboard','mouse','battery','alexa','echo','smart'],
-  'Appliances':       ['blender','mixer','air fryer','instant pot','coffee maker','toaster','microwave','vacuum','fan','heater','iron','waffle maker','juicer','food processor','espresso'],
-  'Clothing':         ['shirt','pants','shorts','dress','jacket','coat','sweater','hoodie','sock','underwear','bra','legging','jeans','skirt','vest','shoes','boots','sneakers','sandals','hat','gloves'],
-  'Home & Garden':    ['furniture','table','chair','shelf','storage','organizer','bin','basket','towel','sheet','pillow','blanket','comforter','mattress','plant','garden','hose','light','bulb','lamp','candle','frame','rug','curtain','shower','pot','pan','cookware'],
-  'Auto':             ['tire','wiper','motor oil','windshield','floor mat','jump starter','air pump','automotive'],
-};
-
+// Keyword/brand coverage modeled on typical Walmart/Target/Costco department
+// and product taxonomies. Category-specific brand names are included where a
+// brand reliably implies one department (e.g. "Tide" -> cleaning); multi-category
+// store brands (Kirkland Signature, Great Value, Good & Gather, etc.) are
+// intentionally omitted since they span every department and would misfire.
 function detectCategory(name) {
   if (!name.trim()) return 'Other';
   const s = name.toLowerCase();
@@ -36,43 +25,65 @@ function detectCategory(name) {
     [/ground\s*beef|ground\s*turkey|ground\s*pork|hot\s*dog|pot\s*pie|stir\s*fry|fried\s*rice/, 'multi-meat'],
     [/roast\s*beef|corned\s*beef|short\s*rib|rack\s*of\s*lamb|leg\s*of\s*lamb|whole\s*chicken|rotisserie\s*chicken/, 'Meat & Seafood'],
     [/jump\s*starter|windshield\s*wiper|motor\s*oil|car\s*wash|wiper\s*blade/, 'Auto'],
+    [/baby\s*wipes?|wipes?\s*baby/, 'Baby & Kids'],
+    [/printer\s*paper|copy\s*paper/, 'Office & School'],
+    [/birthday\s*candles?|axe\s*(body|deodorant|spray)|shark\s*(vacuum|steam|navigator|robot)/, 'multi-disambiguate'],
 
     // Single-word — ordered so ambiguous words resolve correctly
     // Produce
-    [/\bapples?\b|\boranges?\b|\bbananas?\b|\bgrapes?\b|strawberr|blueberr|raspberr|blackberr|cranberr|avocados?\b|tomatos?\b|tomatoes|lettuce|spinach|arugula|\bkale\b|broccoli|cauliflower|carrots?\b|celery|\bonions?\b|\bgarlic\b|\bpeppers?\b|mushrooms?\b|cucumber|zucchini|squash|\bcorn\b|lemons?\b|limes?\b|mangos?\b|mangoes|pineapple|watermelon|\bmelons?\b|\bberries\b|\bberrys?\b|salad|greens|vegetable|veggie|\bfruit\b|cilantro|\bbasil\b|parsley|asparagus|artichoke|\bpeas?\b|edamame\b|scallion|ginger|beet|radish|turnip|yam|sweet\s*potato|butternut|cabbage|bok\s*choy|brussel|sprout|fennel|leek|shallot|fig|peach|plum|apricot|cherry|cherries|nectarine|pomegranate|papaya|guava|passion/, 'Produce'],
+    [/\bapples?\b|\boranges?\b|\bbananas?\b|\bgrapes?\b|strawberr|blueberr|raspberr|blackberr|cranberr|avocados?\b|tomatos?\b|tomatoes|lettuce|spinach|arugula|\bkale\b|broccoli|cauliflower|carrots?\b|celery|\bonions?\b|\bgarlic\b|\bpeppers?\b|mushrooms?\b|cucumber|zucchini|squash|\bcorn\b|lemons?\b|limes?\b|mangos?\b|mangoes|pineapple|watermelon|\bmelons?\b|\bberries\b|\bberrys?\b|salad|greens|vegetable|veggie|\bfruit\b|cilantro|\bbasil\b|parsley|asparagus|artichoke|\bpeas?\b|edamame\b|scallion|ginger|beet|radish|turnip|\byams?\b|sweet\s*potato|\bpotato(es)?\b|butternut|cabbage|bok\s*choy|brussel|sprout|fennel|leek|shallot|\bfigs?\b|peach|plum|apricot|cherry|cherries|nectarine|pomegranate|papaya|guava|passion|\bkiwis?\b|jicama|\bokra\b|eggplant|parsnip|\bchives?\b|\bdill\b|\bmint\b|rosemary|\bthyme\b|oregano|\bsage\b|microgreens?|\bdates?\b|\bcoconuts?\b/, 'Produce'],
     // Bakery
-    [/\bbreads?\b|bagels?\b|muffins?\b|croissants?\b|\bcakes?\b|\bpies?\b|pastry|pastries|cookies?\b|brownies?\b|\brolls?\b|\bbuns?\b|tortillas?\b|pita|sourdough|brioche|donuts?\b|danish|baguette|pretzel\s*bread|flatbread|lavash|naan|challah|focaccia|scone|biscuit|cornbread/, 'Bakery'],
+    [/\bbreads?\b|bagels?\b|muffins?\b|croissants?\b|\bcakes?\b|\bpies?\b|pastry|pastries|cookies?\b|brownies?\b|\brolls?\b|\bbuns?\b|tortillas?\b|pita|sourdough|brioche|donuts?\b|danish|baguette|pretzel\s*bread|flatbread|lavash|naan|challah|focaccia|scone|biscuit|cornbread|sara\s*lee|thomas'?s?\s*(bagel|english\s*muffin)?|dave'?s\s*killer\s*bread|king'?s\s*hawaiian|nature'?s\s*own|wonder\s*bread|entenmann'?s|hostess|pillsbury|little\s*debbie/, 'Bakery'],
     // Deli — word-bounded to avoid "shampoo" matching ham
-    [/\bhams?\b|salami|pepperoni|prosciutto|pastrami|hummus|\bdeli\b|manchego|charcuterie|mortadella|chorizo|coppa|bresaola|genoa|capicola|pancetta|\bbrie\b|camembert|gouda|gruyere|manchego|havarti|provolone|muenster/, 'Deli'],
+    [/\bhams?\b|salami|pepperoni|prosciutto|pastrami|hummus|\bdeli\b|manchego|charcuterie|mortadella|chorizo|coppa|bresaola|genoa|capicola|pancetta|\bbrie\b|camembert|gouda|gruyere|manchego|havarti|provolone|muenster|boar'?s\s*head|oscar\s*mayer|hormel|applegate|land\s*o'?\s*frost|dietz\s*(&|and)\s*watson/, 'Deli'],
     // Meat & Seafood
-    [/\bbeef\b|steaks?\b|\bpork\b|pork\s*chop|\blamb\b|sausages?\b|bacons?\b|chick[eo]ns?\b|chikins?\b|chikens?\b|brisket|short\s*rib|\bribs?\b|salmon|salman|samon|\btunas?\b|shrimps?\b|shrimp|tilapia|\bcod\b|halibut|\bcrabs?\b|lobster|seafood|scallops?\b|oysters?\b|clams?\b|\bmeats?\b|\bwings?\b|drumstick|turkeys?\b|\bfishs?\b|\bfish\b|ground|flank|sirloin|tenderloin|chuck|brisket|mahi|trout|sardine|anchov|sword|bass|perch|pike|herring|calamari|squid|mussel|prawn|langostino|venison|bison|elk|duck|quail|veal|oxtail|osso/, 'Meat & Seafood'],
+    [/\bbeef\b|steaks?\b|\bpork\b|pork\s*chop|\blamb\b|sausages?\b|bacons?\b|chick[eo]ns?\b|chikins?\b|chikens?\b|brisket|short\s*rib|\bribs?\b|salmon|salman|samon|\btunas?\b|shrimps?\b|shrimp|tilapia|\bcod\b|halibut|\bcrabs?\b|lobster|seafood|scallops?\b|oysters?\b|clams?\b|\bmeats?\b|\bwings?\b|drumstick|turkeys?\b|\bfishs?\b|\bfish\b|ground|flank|sirloin|tenderloin|chuck|brisket|mahi|trout|sardine|anchov|sword|bass|perch|pike|herring|calamari|squid|mussel|prawn|langostino|venison|bison|elk|duck|quail|veal|oxtail|osso|\btyson\b|\bperdue\b|foster\s*farms|butterball|johnsonville|jimmy\s*dean|smithfield|omaha\s*steaks/, 'Meat & Seafood'],
     // Dairy
-    [/\bmilks?\b|\bbutter\b|\bcream\b|yogurts?\b|greek\s*yogurt|\beggs?\b|kefir|\bghee\b|lactose|cheeses?\b|cheddar|mozzarella|parmesan|feta|colby|ricotta|cottage\s*cheese|cream\s*cheese|swiss\s*cheese|string\s*cheese|whipped\s*cream|half\s*and\s*half|heavy\s*cream|whipping\s*cream|dairy/, 'Dairy'],
+    [/\bmilks?\b|\bbutter\b|\bcream\b|yogurts?\b|greek\s*yogurt|\beggs?\b|kefir|\bghee\b|lactose|cheeses?\b|cheddar|mozzarella|parmesan|feta|colby|ricotta|cottage\s*cheese|cream\s*cheese|swiss\s*cheese|string\s*cheese|whipped\s*cream|half\s*and\s*half|heavy\s*cream|whipping\s*cream|dairy|chobani|yoplait|\bdannon\b|\bfage\b|land\s*o'?\s*lakes|horizon\s*organic|\bsilk\b|\boatly\b|philadelphia\s*cream|sargento|tillamook|activia|borden|breakstone/, 'Dairy'],
     // Frozen
-    [/frozen|\bpizza\b|pizzas?\b|burritos?\b|nuggets?\b|waffles?\b|pot\s*pie|edamame|dumplings?\b|gyoza|wontons?\b|eggroll|spring\s*roll|lasagna|enchilada|tamale|empanada|taquito|chimichanga|fish\s*stick|tater\s*tot|hash\s*brown|corn\s*dog/, 'Frozen'],
+    [/frozen|\bpizza\b|pizzas?\b|burritos?\b|nuggets?\b|waffles?\b|pot\s*pie|edamame|dumplings?\b|gyoza|wontons?\b|eggroll|spring\s*roll|lasagna|enchilada|tamale|empanada|taquito|chimichanga|fish\s*stick|tater\s*tot|hash\s*brown|corn\s*dog|ben\s*(&|and)\s*jerry'?s|ha?agen[\s-]?dazs|digiorno|red\s*baron|totino'?s|hot\s*pockets|stouffer'?s|lean\s*cuisine|marie\s*callender'?s|birds\s*eye|\beggo\b|van\s*de\s*kamp'?s|gorton'?s|amy'?s\s*(kitchen)?|breyers|talenti|blue\s*bell|edy'?s/, 'Frozen'],
     // Pantry & Snacks
-    [/\boil\b|\brice\b|\bpasta\b|noodles?\b|ramen|udon|soba|orzo|\bsauce\b|sauces|\bsoups?\b|\bbroth\b|\bstock\b|canned|beans|lentils?|chickpeas?|\bflour\b|sugars?|\bsalt\b|spices?|seasonings?|ketchup|mustard|\bmayo\b|mayonnaise|dressing|vinegar|syrups?|honey|jams?\b|jelly|jellies|\bcereal\b|oatmeal|granola|chips?\b|crackers?\b|pretzels?\b|popcorn|almonds?|cashews?|walnuts?|pecans?|pistachios?|peanuts?|macadamia|chocolates?|candies?\b|candy|snacks?\b|olives?|pickles?|relish|salsa|guacamole|hummus|tahini|miso|soy\s*sauce|teriyaki|hoisin|sriracha|tabasco|worcestershire|bouillon|coconut\s*milk|tomato\s*paste|tomato\s*sauce|marinara|alfredo|pesto|balsamic|maple\s*syrup|agave|stevia|splenda|protein\s*powder|collagen\s*powder|chia|flaxseed|quinoa|farro|barley|lentil|split\s*pea/, 'Pantry & Snacks'],
+    [/\boil\b|\brice\b|\bpasta\b|noodles?\b|ramen|udon|soba|orzo|\bsauce\b|sauces|\bsoups?\b|\bbroth\b|\bstock\b|canned|beans|lentils?|chickpeas?|\bflour\b|sugars?|\bsalt\b|spices?|seasonings?|ketchup|mustard|\bmayo\b|mayonnaise|dressing|vinegar|syrups?|honey|jams?\b|jelly|jellies|\bcereal\b|oatmeal|granola|chips?\b|crackers?\b|pretzels?\b|popcorn|almonds?|cashews?|walnuts?|pecans?|pistachios?|peanuts?|macadamia|chocolates?|candies?\b|candy|snacks?\b|olives?|pickles?|relish|salsa|guacamole|hummus|tahini|miso|soy\s*sauce|teriyaki|hoisin|sriracha|tabasco|worcestershire|bouillon|coconut\s*milk|tomato\s*paste|tomato\s*sauce|marinara|alfredo|pesto|balsamic|maple\s*syrup|agave|stevia|splenda|protein\s*powder|collagen\s*powder|chia|flaxseed|quinoa|farro|barley|lentil|split\s*pea|lay'?s|doritos|cheetos|ruffles|pringles|tostitos|fritos|goldfish\s*crackers?|cheez[\s-]?its?|\britz\b|triscuits?|wheat\s*thins?|\boreos?\b|chips\s*ahoy|nutter\s*butter|kellogg'?s|cheerios|frosted\s*flakes|cap'?n\s*crunch|lucky\s*charms?|nature\s*valley|clif\s*bar|kind\s*bar|quest\s*bar|barilla|ronzoni|mac\s*(and|&)\s*cheese|campbell'?s|progresso|chef\s*boyardee|hunt'?s|heinz|french'?s|nutella|skippy|\bjif\b|smucker'?s|m&ms?\b|hershey'?s|reese'?s|snickers|kit\s*kat|\btwix\b|ferrero\s*rocher|pop[\s-]?tarts?|rice\s*krispies|cracker\s*jack|\bcombos\b|slim\s*jim|beef\s*jerky|\bjerky\b/, 'Pantry & Snacks'],
     // Beverages
-    [/\bwaters?\b|juices?\b|\bsoda\b|sodas|coffees?\b|espresso|\bteas?\b|\bwines?\b|\bbeers?\b|sparkling|kombucha|lemonade|gatorade|bodyarmor|creamer|electrolyte|beverages?|drinks?\b|smoothie|protein\s*shake|collagen\s*drink|coconut\s*water|aloe\s*drink|matcha|cider|sake|whiskey|bourbon|vodka|rum|tequila|gin|liquor|spirits?|champagne|prosecco|sangria/, 'Beverages'],
+    [/\bwaters?\b|juices?\b|\bsoda\b|sodas|coffees?\b|espresso|\bteas?\b|\bwines?\b|\bbeers?\b|sparkling|kombucha|lemonade|gatorade|bodyarmor|creamer|electrolyte|beverages?|drinks?\b|smoothie|protein\s*shake|collagen\s*drink|coconut\s*water|aloe\s*drink|matcha|cider|sake|whiskey|bourbon|vodka|rum|tequila|gin|liquor|spirits?|champagne|prosecco|sangria|coca[\s-]?cola|\bcoke\b|\bpepsi\b|\bsprite\b|dr\.?\s*pepper|mountain\s*dew|\bfanta\b|powerade|red\s*bull|monster\s*energy|\bcelsius\b|starbucks|folgers|maxwell\s*house|\blipton\b|snapple|poland\s*spring|\bdasani\b|aquafina|la\s*croix|lacroix|perrier|san\s*pellegrino|simply\s*orange|tropicana|minute\s*maid|ocean\s*spray|capri\s*sun|kool[\s-]?aid/, 'Beverages'],
     // Paper & Cleaning
-    [/laundry|detergents?\b|dishwasher|\bwipes?\b|sponges?\b|bleach|cleaning|cleaners?|\btide\b|downy|\bbounce\b|dryer|aluminum\s*foil|\bfoils?\b|ziplock|ziploc|tissues?\b|napkins?\b|lysol|clorox|febreze|fabuloso|pine\s*sol|comet|ajax|method|seventh\s*generation|mr\s*clean|dawn\s*dish|palmolive|cascade|finish\s*dish|affresh|rug\s*cleaner|floor\s*cleaner|toilet\s*bowl|bathroom\s*cleaner|kitchen\s*cleaner|all\s*purpose|disinfect|antibacterial|hand\s*soap|bar\s*soap/, 'Paper & Cleaning'],
+    [/laundry|detergents?\b|dishwasher|\bwipes?\b|sponges?\b|bleach|cleaning|cleaners?|\btide\b|downy|\bbounce\b|dryer|aluminum\s*foil|\bfoils?\b|ziplock|ziploc|tissues?\b|napkins?\b|lysol|clorox|febreze|fabuloso|pine\s*sol|comet|ajax|method|seventh\s*generation|mr\s*clean|dawn\s*dish|palmolive|cascade|finish\s*dish|affresh|rug\s*cleaner|floor\s*cleaner|toilet\s*bowl|bathroom\s*cleaner|kitchen\s*cleaner|all\s*purpose|disinfect|antibacterial|hand\s*soap|bar\s*soap|\bbounty\b|charmin|kleenex|cottonelle|\bpuffs\b|\bhefty\b|\bglad\b|windex|swiffer|arm\s*(&|and)\s*hammer|oxiclean|oxi\s*clean/, 'Paper & Cleaning'],
     // Health & Beauty
-    [/vitamins?\b|supplements?\b|\bmedicines?\b|shampoos?\b|conditioners?\b|lotion|sunscreen|toothpaste|toothbrush|\brazors?\b|deodorant|ibuprofen|tylenol|\badvil\b|aleve|aspirin|allerg|melatonin|collagen|moisturizer|\bfloss\b|mouthwash|listerine|contacts|eye\s*drops|band\s*aid|bandage|antiseptic|neosporin|thermometer|blood\s*pressure|glucosamine|probiotic|omega|zinc|magnesium|calcium|vitamin\s*[a-z]|multivitamin|prenatal|biotin|turmeric|elderberry|echinacea|melatonin|fiber|stool|laxative|antacid|pepto|tums|gas\s*x|zyrtec|claritin|flonase|sudafed|nyquil|dayquil|mucinex|robitussin|cough|cold\s*medicine|pain\s*reliever|nail\s*clipper|tweezer|curling|flat\s*iron|hair\s*dryer|hair\s*color|mascara|lipstick|foundation|concealer|eyeliner|blush|bronzer|primer|setting\s*spray|makeup|perfume|cologne|body\s*spray|aftershave|electric\s*razor|nail\s*polish|cotton\s*ball|q\s*tips?|feminine|tampon|pad\s*feminine|condom|pregnancy|test\s*kit/, 'Health & Beauty'],
+    [/vitamins?\b|supplements?\b|\bmedicines?\b|shampoos?\b|conditioners?\b|lotion|sunscreen|toothpaste|toothbrush|\brazors?\b|deodorant|ibuprofen|tylenol|\badvil\b|aleve|aspirin|allerg|melatonin|collagen|moisturizer|\bfloss\b|mouthwash|listerine|contacts|eye\s*drops|band[\s-]?aids?|bandage|antiseptic|neosporin|thermometer|blood\s*pressure|glucosamine|probiotic|omega|zinc|magnesium|calcium|vitamin\s*[a-z]|multivitamin|prenatal|biotin|turmeric|elderberry|echinacea|melatonin|fiber|stool|laxative|antacid|pepto|tums|gas\s*x|zyrtec|claritin|flonase|sudafed|nyquil|dayquil|mucinex|robitussin|cough|cold\s*medicine|pain\s*reliever|nail\s*clipper|tweezer|curling|flat\s*iron|hair\s*dryer|hair\s*color|mascara|lipstick|foundation|concealer|eyeliner|blush|bronzer|primer|setting\s*spray|makeup|perfume|cologne|body\s*spray|aftershave|electric\s*razor|nail\s*polish|cotton\s*ball|q\s*tips?|feminine|tampon|pad\s*feminine|condom|pregnancy|test\s*kit|neutrogena|cetaphil|cerave|aveeno|\bolay\b|nivea|colgate|\bcrest\b|oral[\s-]?b|gillette|schick|old\s*spice|head\s*(&|and)\s*shoulders|pantene|herbal\s*essences?|l'?oreal|maybelline|revlon/, 'Health & Beauty'],
+    // Baby & Kids
+    [/diapers?\b|baby\s*wipes?|wipes?\s*baby|\bformula\b|baby\s*food|pacifiers?\b|onesies?\b|\bstrollers?\b|car\s*seat|baby\s*monitor|\bbassinets?\b|\bcribs?\b|high\s*chair|teether|teething|\bbibs?\b|sippy\s*cup|playpen|baby\s*gate|pampers|huggies|\bluvs\b|enfamil|similac|\bgerber\b|baby\s*lotion|baby\s*shampoo|baby\s*wash|diaper\s*rash|baby\s*powder|baby\s*oil|nursing\s*pad|breast\s*pump/, 'Baby & Kids'],
+    // Pet Supplies
+    [/dog\s*food|cat\s*food|\bkibble\b|pet\s*treats?|cat\s*litter|litter\s*box|dog\s*leash|\bleash\b|dog\s*collar|cat\s*collar|dog\s*toys?|cat\s*toys?|fish\s*tank|\baquarium\b|\bpurina\b|pedigree|blue\s*buffalo|\biams\b|friskies|fancy\s*feast|whiskas|milk[\s-]?bone|greenies|\bkong\b|dog\s*bed|pet\s*bed|flea\s*(treatment|collar|medicine)?|tick\s*treatment|dog\s*treats?|cat\s*treats?|hairball|pet\s*shampoo|chew\s*toy/, 'Pet Supplies'],
     // Electronics
-    [/\btv\b|televisions?\b|laptops?\b|computers?\b|tablets?\b|\bipad\b|\biphone\b|\bphone\b|chargers?\b|cables?\b|headphones?\b|earphones?\b|earbuds?\b|speakers?\b|cameras?\b|printers?\b|monitors?\b|keyboards?\b|\bmouse\b|mice|batteries?\b|alexa|\becho\b|smart\s*home|router|modem|surge\s*protector|extension\s*cord|hdmi|usb|flash\s*drive|hard\s*drive|ssd|memory\s*card|sd\s*card|webcam|microphone|gaming|controller|playstation|xbox|nintendo|switch|airpods?|beats|bose|sonos|ring\s*doorbell|nest|smart\s*bulb|smart\s*plug|solar\s*panel|power\s*bank|wireless/, 'Electronics'],
+    [/\btv\b|televisions?\b|laptops?\b|computers?\b|tablets?\b|\bipad\b|\biphone\b|\bphone\b|chargers?\b|cables?\b|headphones?\b|earphones?\b|earbuds?\b|speakers?\b|cameras?\b|printers?\b|monitors?\b|keyboards?\b|\bmouse\b|mice|batteries?\b|alexa|\becho\b|smart\s*home|router|modem|surge\s*protector|extension\s*cord|hdmi|usb|flash\s*drive|hard\s*drive|ssd|memory\s*card|sd\s*card|webcam|microphone|gaming|controller|playstation|xbox|nintendo|switch|airpods?|beats|bose|sonos|ring\s*doorbell|nest|smart\s*bulb|smart\s*plug|solar\s*panel|power\s*bank|wireless|macbook|apple\s*watch|apple\s*tv|\bimac\b|samsung|\bsony\b|\broku\b|\bjbl\b|chromebook|google\s*home|fire\s*stick|firestick/, 'Electronics'],
     // Appliances
-    [/blenders?\b|mixers?\b|toasters?\b|microwaves?\b|vacuums?\b|\bfans?\b|juicers?\b|dehumidifier|air\s*purifier|humidifier|space\s*heater|electric\s*kettle|panini|griddle|grill|smoker|pressure\s*cooker|sous\s*vide|mandoline|salad\s*spinner|can\s*opener|wine\s*opener|corkscrew|dishwasher|washing\s*machine|dryer\s*machine|refrigerator|freezer|chest\s*freezer/, 'Appliances'],
+    [/blenders?\b|mixers?\b|toasters?\b|microwaves?\b|vacuums?\b|\bfans?\b|juicers?\b|dehumidifier|air\s*purifier|humidifier|space\s*heater|electric\s*kettle|panini|griddle|grill|smoker|pressure\s*cooker|sous\s*vide|mandoline|salad\s*spinner|can\s*opener|wine\s*opener|corkscrew|dishwasher|washing\s*machine|dryer\s*machine|refrigerator|freezer|chest\s*freezer|kitchenaid|\bninja\b|cuisinart|\bkeurig\b|nespresso|vitamix|crock[\s-]?pot|\bdyson\b|roomba|irobot|hamilton\s*beach|black\s*\+?\s*decker|george\s*foreman/, 'Appliances'],
     // Clothing
-    [/\bshirts?\b|\bpants?\b|\bshorts?\b|\bdresses?\b|jackets?\b|\bcoats?\b|sweaters?\b|hoodies?\b|\bsocks?\b|underwear|\bbras?\b|leggings?\b|\bjeans?\b|skirts?\b|\bvests?\b|\bshoes?\b|\bboots?\b|sneakers?\b|sandals?\b|\bhats?\b|gloves?\b|clothing|apparel|tights|stockings|pajamas|pjs|swimsuit|bikini|board\s*shorts|rash\s*guard|sports\s*bra|athletic|workout|running\s*shoe|slippers?|flip\s*flops?|loafers?|oxfords?|heels?|pumps?|wedges?|moccasins?|crocs?|ugg|north\s*face|columbia|patagonia|carhartt|polo|khaki|chino|cargo\s*pants|trousers?|blazer|suit\s*jacket|cardigan|pullover|turtleneck|tank\s*top|crop\s*top|romper|jumpsuit|overalls?|parka|windbreaker|rain\s*jacket|fleece|thermal|base\s*layer|robe|scarf|beanie|cap|visor|belt|wallet/, 'Clothing'],
+    [/\bshirts?\b|\bpants?\b|\bshorts?\b|\bdresses?\b|jackets?\b|\bcoats?\b|sweaters?\b|hoodies?\b|\bsocks?\b|underwear|\bbras?\b|leggings?\b|\bjeans?\b|skirts?\b|\bvests?\b|\bshoes?\b|\bboots?\b|sneakers?\b|sandals?\b|\bhats?\b|gloves?\b|clothing|apparel|tights|stockings|pajamas|pjs|swimsuit|bikini|board\s*shorts|rash\s*guard|sports\s*bra|athletic|workout|running\s*shoe|slippers?|flip\s*flops?|loafers?|oxfords?|heels?|pumps?|wedges?|moccasins?|crocs?|ugg|north\s*face|columbia|patagonia|carhartt|polo|khaki|chino|cargo\s*pants|trousers?|blazer|suit\s*jacket|cardigan|pullover|turtleneck|tank\s*top|crop\s*top|romper|jumpsuit|overalls?|parka|windbreaker|rain\s*jacket|fleece|thermal|base\s*layer|robe|scarf|beanie|cap|visor|belt|wallet|\bnike\b|adidas|under\s*armour|levi'?s|\bhanes\b|fruit\s*of\s*the\s*loom/, 'Clothing'],
     // Home & Garden
     [/furniture|\btables?\b|\bchairs?\b|\bshelves?\b|shelving|storage|organizer|\bbins?\b|baskets?\b|\btowels?\b|bedsheets?|\bsheets?\b|pillows?\b|blankets?\b|comforters?\b|mattress|mattresses|\bplants?\b|garden|\bhose\b|light\s*bulb|\bbulbs?\b|\blamps?\b|candles?\b|\brugs?\b|curtains?\b|\bpots?\b|\bpans?\b|cookware|bakeware|frying\s*pan|cast\s*iron|dutch\s*oven|baking\s*sheet|muffin\s*tin|cutting\s*board|knife|knives|spatula|ladle|whisk|tongs|colander|strainer|mixing\s*bowl|measuring\s*cup|glass\s*container|storage\s*container|tupperware|zip\s*lock|reusable\s*bag|trash\s*can|hamper|laundry\s*basket|shower\s*curtain|bath\s*mat|bath\s*rug|toilet\s*seat|plunger|toilet\s*brush|picture\s*frame|\bframes?\b|mirror|clock|vase|artificial\s*flower|fake\s*plant|succulent|patio|outdoor\s*furniture|umbrella\s*patio|fire\s*pit|lawn\s*mower|weed\s*eater|leaf\s*blower|pressure\s*washer|garden\s*tool|shovel|rake|hoe|wheelbarrow|planter|potting\s*soil|fertilizer|mulch|bird\s*feeder|stepping\s*stone|string\s*light/, 'Home & Garden'],
+    // Toys & Games
+    [/\btoys?\b|\blego\b|barbie|hot\s*wheels|action\s*figure|board\s*game|jigsaw\s*puzzle|\bpuzzles?\b|\bnerf\b|play[\s-]?doh|stuffed\s*animal|\bplush\b|\bdolls?\b|rc\s*car|remote\s*control\s*car|video\s*games?\b|card\s*game|building\s*blocks?|\bplayset\b|dollhouse|\buno\b|monopoly|\bjenga\b/, 'Toys & Games'],
+    // Office & School
+    [/\bpens?\b|\bpencils?\b|notebooks?\b|\bbinders?\b|\bfolders?\b|\bstaplers?\b|printer\s*paper|copy\s*paper|sticky\s*notes?|post[\s-]?it|highlighters?\b|\bmarkers?\b|crayons?\b|\bbackpacks?\b|\bscissors?\b|tape\s*dispenser|scotch\s*tape|glue\s*stick|\bglue\b|envelopes?\b|calculator|index\s*cards?|\bplanner\b|whiteboard|dry\s*erase/, 'Office & School'],
+    // Sporting Goods & Outdoors
+    [/basketballs?\b|footballs?\b|soccer\s*ball|baseballs?\b|tennis\s*racket|golf\s*(club|ball)s?|yoga\s*mat|dumbbells?\b|resistance\s*band|camping\s*tent|\btents?\b|sleeping\s*bag|\bcoolers?\b|fishing\s*rod|fishing\s*reel|bike\s*helmet|bicycles?\b|\bbikes?\b|skateboard|\bkayaks?\b|life\s*jacket|hiking\s*(boots|pack|backpack)|treadmill|exercise\s*bike|kettlebell|jump\s*rope/, 'Sporting Goods & Outdoors'],
+    // Seasonal & Party
+    [/christmas\s*tree|ornaments?\b|wrapping\s*paper|gift\s*wrap|gift\s*bags?\b|greeting\s*cards?\b|\bballoons?\b|party\s*favor|halloween\s*costumes?|\bcostumes?\b|easter\s*egg|egg\s*dye|valentine'?s?\s*card|\bfireworks?\b|\bconfetti\b|streamers?\b|party\s*hat|pi[nñ]ata|\btinsel\b/, 'Seasonal & Party'],
     // Auto
     [/\btires?\b|wipers?\b|windshield|floor\s*mat|automotive|oil\s*change|brake|coolant|antifreeze|transmission|car\s*battery|jumper\s*cable|air\s*compressor|tire\s*inflator|car\s*cover|seat\s*cover|steering\s*wheel\s*cover|car\s*freshener|rain\s*x|wd\s*40|wd40/, 'Auto'],
   ];
 
   for (const [rx, cat] of rules) {
-    if (cat === 'multi' || cat === 'multi-meat') {
-      if (rx.test(s)) return cat === 'multi-meat' ? 'Meat & Seafood' : 'Pantry & Snacks';
+    if (cat === 'multi' || cat === 'multi-meat' || cat === 'multi-disambiguate') {
+      if (rx.test(s)) {
+        if (cat === 'multi-meat') return 'Meat & Seafood';
+        if (cat === 'multi') return 'Pantry & Snacks';
+        // multi-disambiguate: figure out which specific phrase matched
+        if (/birthday\s*candles?/.test(s)) return 'Seasonal & Party';
+        if (/axe\s*(body|deodorant|spray)/.test(s)) return 'Health & Beauty';
+        if (/shark\s*(vacuum|steam|navigator|robot)/.test(s)) return 'Appliances';
+      }
     } else if (rx.test(s)) {
       return cat;
     }
@@ -91,6 +102,7 @@ let pollTimer = null;
 let editingItemId = null;
 let selectMode = false;
 let selectedIds = new Set();
+let isDragging = false;
 
 // ── DOM refs ───────────────────────────────────────────────────────────────────
 const loadingState    = document.getElementById('loading-state');
@@ -234,8 +246,10 @@ async function api(method, path, body) {
 }
 
 async function loadList(initial) {
+  if (!initial && isDragging) return; // don't yank the list out from under an active drag
   try {
     const data = await api('GET', `/api/lists/${listCode}`);
+    if (!initial && isDragging) return; // a drag may have started while this request was in flight
     if (initial || data.updated_at !== lastUpdatedAt) {
       lastUpdatedAt = data.updated_at;
       listData = data;
@@ -385,6 +399,7 @@ function buildItemNode(item) {
   div.dataset.itemId = item.id;
   div.dataset.updatedAt = item.updated_at;
   div.dataset.checked = String(item.checked);
+  div.dataset.section = item.checked ? '__checked__' : (CATEGORY_ORDER.includes(item.category) ? item.category : 'Other');
 
   if (selectMode) {
     const selCheck = document.createElement('div');
@@ -436,8 +451,14 @@ function buildItemNode(item) {
     starBtn.textContent = isStaple(item.name) ? '★' : '☆';
     starBtn.addEventListener('click', e => { e.stopPropagation(); toggleStaple(item); });
 
-    actions.append(starBtn, editBtn, delBtn);
+    const dragHandle = document.createElement('div');
+    dragHandle.className = 'drag-handle';
+    dragHandle.title = 'Drag to reorder';
+
+    actions.append(starBtn, editBtn, delBtn, dragHandle);
     div.appendChild(actions);
+
+    attachDragHandle(dragHandle, div);
   }
 
   // Swipe gestures (touch only, not in select mode)
@@ -453,6 +474,7 @@ function buildItemNode(item) {
 
     let swipeStartX, swipeStartY, isSwiping = false;
     div.addEventListener('touchstart', e => {
+      if (e.target.closest('.drag-handle')) return; // let the drag handle own this touch
       swipeStartX = e.touches[0].clientX;
       swipeStartY = e.touches[0].clientY;
       isSwiping = false;
@@ -480,6 +502,101 @@ function buildItemNode(item) {
   }
 
   return div;
+}
+
+// ── Drag-and-drop reorder (mouse + touch + pen via Pointer Events) ──────────────
+function attachDragHandle(handleEl, cardEl) {
+  let drag = null;
+
+  handleEl.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+
+    const sectionKey = cardEl.dataset.section;
+    const siblings = Array.from(itemsContainer.querySelectorAll('.item-card'))
+      .filter(el => el.dataset.section === sectionKey);
+    const startIndex = siblings.indexOf(cardEl);
+    if (startIndex === -1 || siblings.length < 2) return;
+
+    const gap = parseFloat(getComputedStyle(itemsContainer).rowGap) || 10;
+    const step = cardEl.getBoundingClientRect().height + gap;
+
+    drag = {
+      sectionKey, siblings, startIndex, step,
+      currentIndex: startIndex,
+      startY: e.clientY,
+    };
+
+    isDragging = true;
+    cardEl.classList.add('dragging');
+    handleEl.setPointerCapture(e.pointerId);
+  });
+
+  handleEl.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const { siblings, startIndex, step } = drag;
+    const minDelta = -startIndex * step;
+    const maxDelta = (siblings.length - 1 - startIndex) * step;
+    const deltaY = Math.max(minDelta, Math.min(maxDelta, e.clientY - drag.startY));
+    cardEl.style.transform = `translateY(${deltaY}px)`;
+
+    const newIndex = Math.max(0, Math.min(siblings.length - 1, startIndex + Math.round(deltaY / step)));
+    if (newIndex !== drag.currentIndex) {
+      drag.currentIndex = newIndex;
+      siblings.forEach((el, i) => {
+        if (el === cardEl) return;
+        let shift = 0;
+        if (startIndex < newIndex && i > startIndex && i <= newIndex) shift = -step;
+        else if (startIndex > newIndex && i >= newIndex && i < startIndex) shift = step;
+        el.style.transition = 'transform 0.15s';
+        el.style.transform = shift ? `translateY(${shift}px)` : '';
+      });
+    }
+  });
+
+  handleEl.addEventListener('pointerup', e => finishDrag(e));
+  handleEl.addEventListener('pointercancel', e => finishDrag(e, true));
+
+  function finishDrag(e, cancelled) {
+    if (!drag) return;
+    const { siblings, startIndex, currentIndex, sectionKey } = drag;
+    try { handleEl.releasePointerCapture(e.pointerId); } catch {}
+    cardEl.classList.remove('dragging');
+    cardEl.style.transition = '';
+    cardEl.style.transform = '';
+    siblings.forEach(el => { el.style.transition = ''; el.style.transform = ''; });
+
+    if (!cancelled && currentIndex !== startIndex) {
+      const order = siblings.map(el => el.dataset.itemId);
+      const [movedId] = order.splice(startIndex, 1);
+      order.splice(currentIndex, 0, movedId);
+      persistReorder(sectionKey, order); // clears isDragging itself once the save settles
+    } else {
+      isDragging = false;
+    }
+    drag = null;
+  }
+}
+
+async function persistReorder(sectionKey, orderedIds) {
+  const changed = [];
+  orderedIds.forEach((id, idx) => {
+    // dataset.itemId is always a string; items[].id may not be, so compare loosely
+    const it = items.find(i => String(i.id) === String(id));
+    if (it && it.position !== idx) { it.position = idx; changed.push({ id: it.id, position: idx }); }
+  });
+  if (!changed.length) { isDragging = false; return; }
+  renderItems();
+  try {
+    await api('POST', `/api/lists/${listCode}/items/reorder`, { items: changed });
+    lastUpdatedAt = null;
+  } catch {
+    showToast('Could not save new order. Try again.', 'error');
+    lastUpdatedAt = null;
+    loadList(false);
+  } finally {
+    isDragging = false;
+  }
 }
 
 function escHtml(str) {
