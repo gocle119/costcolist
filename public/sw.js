@@ -1,5 +1,9 @@
-const CACHE = 'shop119-v3';
-const STATIC = ['/', '/index.html', '/list.html', '/manifest.json', '/icon.svg'];
+const CACHE = 'shop119-v4';
+const STATIC = [
+  '/', '/index.html', '/list.html', '/manifest.json', '/icon.svg',
+  '/icon-192.png', '/icon-512.png', '/icon-maskable-512.png',
+  '/apple-touch-icon.png', '/favicon.png',
+];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(STATIC)).then(() => self.skipWaiting()));
