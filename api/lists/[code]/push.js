@@ -1,6 +1,11 @@
 const supabase = require('../../_supabase');
-const { isConfigured } = require('../../_push');
+const { isConfigured, sendToList } = require('../../_push');
 
+// Combined push-notification endpoint (kept as one file, not three, to stay under
+// Vercel Hobby's serverless-function-per-deployment cap):
+//   POST   { subscription }      -> subscribe this browser to the list
+//   POST   { action: 'join' }    -> notify existing subscribers someone joined
+//   DELETE { endpoint }          -> unsubscribe
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -9,7 +14,7 @@ module.exports = async (req, res) => {
   const code = (req.query.code || '').toUpperCase();
   const { data: list, error: listError } = await supabase
     .from('lists')
-    .select('id')
+    .select('id, name')
     .eq('code', code)
     .eq('archived', false)
     .single();
@@ -17,7 +22,17 @@ module.exports = async (req, res) => {
   if (listError || !list) return res.status(404).json({ error: 'List not found' });
 
   if (req.method === 'POST') {
-    const { subscription } = req.body || {};
+    const { subscription, action } = req.body || {};
+
+    if (action === 'join') {
+      const result = await sendToList(list.id, {
+        title: list.name,
+        body: 'Someone joined your list',
+        url: `/list/${code}`,
+      });
+      return res.status(200).json(result);
+    }
+
     if (!subscription || !subscription.endpoint || !subscription.keys) {
       return res.status(400).json({ error: 'Invalid subscription' });
     }

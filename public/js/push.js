@@ -18,9 +18,13 @@ async function isNotifySupported() {
   return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 }
 
-async function enableNotifications(code) {
+async function enableNotifications(code, publicKey) {
   if (!(await isNotifySupported())) {
     showToast('Push notifications aren’t supported on this browser.', 'error', 3500);
+    return false;
+  }
+  if (!publicKey) {
+    showToast('Push notifications aren’t set up yet.', 'error', 3000);
     return false;
   }
   const permission = await Notification.requestPermission();
@@ -29,10 +33,6 @@ async function enableNotifications(code) {
     return false;
   }
   try {
-    const keyRes = await fetch('/api/vapid-public-key');
-    if (!keyRes.ok) throw new Error('not configured');
-    const { publicKey } = await keyRes.json();
-
     const reg = await navigator.serviceWorker.ready;
     let sub = await reg.pushManager.getSubscription();
     if (!sub) {
@@ -41,7 +41,7 @@ async function enableNotifications(code) {
         applicationServerKey: urlBase64ToUint8Array(publicKey),
       });
     }
-    await api('POST', `/api/lists/${code}/subscribe`, { subscription: sub.toJSON() });
+    await api('POST', `/api/lists/${code}/push`, { subscription: sub.toJSON() });
     showToast('Notifications on for this list', 'success', 2000);
     return true;
   } catch (err) {
@@ -54,7 +54,7 @@ async function disableNotifications(code) {
   try {
     const sub = await getCurrentSubscription();
     if (sub) {
-      await api('DELETE', `/api/lists/${code}/subscribe`, { endpoint: sub.endpoint });
+      await api('DELETE', `/api/lists/${code}/push`, { endpoint: sub.endpoint });
       await sub.unsubscribe();
     }
     showToast('Notifications off for this list', 'info', 2000);

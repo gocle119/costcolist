@@ -28,5 +28,9 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: 'Failed to fetch items' });
   }
 
-  return res.status(200).json({ ...list, items: items || [] });
+  return res.status(200).json({
+    ...list,
+    items: items || [],
+    vapidPublicKey: process.env.VAPID_PUBLIC_KEY || null,
+  });
 };

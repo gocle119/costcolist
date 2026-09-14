@@ -304,7 +304,7 @@ function showMain(data) {
     if (!exists) {
       lists.unshift({ code: data.code, name: data.name, createdAt: data.created_at });
       localStorage.setItem(key, JSON.stringify(lists.slice(0, 20)));
-      api('POST', `/api/lists/${data.code}/notify-join`).catch(() => {});
+      api('POST', `/api/lists/${data.code}/push`, { action: 'join' }).catch(() => {});
     }
   } catch {}
 }
@@ -322,7 +322,7 @@ async function toggleNotify() {
   if (sub) {
     await disableNotifications(listCode);
   } else {
-    await enableNotifications(listCode);
+    await enableNotifications(listCode, listData ? listData.vapidPublicKey : null);
   }
   refreshNotifyBtnLabel();
 }
