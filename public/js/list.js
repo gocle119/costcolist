@@ -906,6 +906,7 @@ async function submitAddItem() {
     });
     items.push(item);
     lastUpdatedAt = null;
+    window.track?.('item_added', { category: item.category });
     renderItems();
     // Animate the newly added item
     const newNode = itemsContainer.querySelector(`[data-item-id="${item.id}"]`);
@@ -928,6 +929,7 @@ shareBtn.addEventListener('click', openShare);
 function openShare() {
   const joinUrl = `${window.location.origin}/join/${listCode}`;
   if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
+    window.track?.('list_shared', { method: 'native' });
     navigator.share({ title: listData ? listData.name : 'Shop119', url: joinUrl }).catch(() => {});
   } else {
     shareOverlay.style.display = 'flex';
@@ -942,6 +944,7 @@ window.copyText = function (type) {
     ? document.getElementById('share-code-val').textContent
     : document.getElementById('share-url-val').textContent;
   navigator.clipboard.writeText(text).then(() => {
+    window.track?.('list_shared', { method: type === 'code' ? 'copy_code' : 'copy_url' });
     showToast('Copied!', 'success', 2000);
   }).catch(() => showToast('Could not copy — please copy manually.', 'error'));
 };

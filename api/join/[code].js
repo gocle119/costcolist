@@ -25,6 +25,7 @@ function renderPage({ title, description, ogUrl, imageUrl, bodyHtml }) {
   <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" href="/favicon.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <script src="/js/analytics.js"></script>
 </head>
 <body>
   <div class="page" style="display:flex; flex-direction:column; align-items:center; text-align:center; padding-top:60px;">
@@ -64,9 +65,18 @@ module.exports = async (req, res) => {
         bodyHtml: `
           <h1 style="margin-bottom:8px;">Shop<span style="color:var(--red);">119</span></h1>
           <p style="font-size:1.1rem; margin-bottom:24px;">You're invited to join<br><strong>${safeName}</strong></p>
-          <a href="${listUrl}" class="btn btn-red" style="padding:14px 32px; font-size:1rem;">Join List</a>
+          <a href="${listUrl}" id="join-btn" class="btn btn-red" style="padding:14px 32px; font-size:1rem;">Join List</a>
           <p style="color:var(--muted); font-size:0.85rem; margin-top:16px;">Code: ${list.code}</p>
-          <script>setTimeout(function () { window.location.href = ${JSON.stringify(listUrl)}; }, 1200);</script>
+          <script>
+            var joinUrl = ${JSON.stringify(listUrl)};
+            var tracked = false;
+            function goJoin() {
+              if (!tracked) { tracked = true; window.track && window.track('list_joined', { method: 'link' }); }
+              window.location.href = joinUrl;
+            }
+            document.getElementById('join-btn').addEventListener('click', function (e) { e.preventDefault(); goJoin(); });
+            setTimeout(goJoin, 1200);
+          </script>
         `,
       }));
     }

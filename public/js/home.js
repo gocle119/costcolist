@@ -163,6 +163,7 @@ async function createFromStaples() {
     const list = await res.json();
     if (!res.ok) throw new Error(list.error);
     saveMyList(list.code, list.name);
+    window.track?.('list_created', { code: list.code, source: 'staples' });
 
     const staples = getStaples();
     await Promise.allSettled(
@@ -209,6 +210,7 @@ async function createList() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to create list');
     saveMyList(data.code, data.name);
+    window.track?.('list_created', { code: data.code, source: 'blank' });
     window.location.href = `/list/${data.code}`;
   } catch (err) {
     createError.textContent = err.message;
@@ -228,6 +230,7 @@ function joinList() {
   const code = joinCodeInput.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
   if (code.length !== 6) { joinError.textContent = 'Please enter the full 6-character code.'; return; }
   joinError.textContent = '';
+  window.track?.('list_joined', { method: 'code' });
   window.location.href = `/list/${code}`;
 }
 
