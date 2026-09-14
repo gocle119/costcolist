@@ -288,7 +288,7 @@ function showMain(data) {
   if (loadStaplesBtn) loadStaplesBtn.style.display = hasStaples ? 'inline-flex' : 'none';
   if (overflowStaplesBtn) overflowStaplesBtn.style.display = hasStaples ? '' : 'none';
   document.getElementById('share-code-val').textContent = data.code;
-  document.getElementById('share-url-val').textContent = window.location.href;
+  document.getElementById('share-url-val').textContent = `${window.location.origin}/join/${data.code}`;
 
   // Save to Your lists on any visit — joined or created
   try {
@@ -926,8 +926,9 @@ async function submitAddItem() {
 shareBtn.addEventListener('click', openShare);
 
 function openShare() {
+  const joinUrl = `${window.location.origin}/join/${listCode}`;
   if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
-    navigator.share({ title: listData ? listData.name : 'Shop119', url: window.location.href }).catch(() => {});
+    navigator.share({ title: listData ? listData.name : 'Shop119', url: joinUrl }).catch(() => {});
   } else {
     shareOverlay.style.display = 'flex';
   }

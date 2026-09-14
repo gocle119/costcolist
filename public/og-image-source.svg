@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#E31837"/>
+  <rect x="90" y="235" width="160" height="160" rx="28" fill="white"/>
+  <text x="170" y="345" font-family="Arial Black, Arial, sans-serif" font-size="110" font-weight="900" text-anchor="middle" dominant-baseline="central" fill="#E31837">C</text>
+  <text x="285" y="330" font-family="Arial, sans-serif" font-size="96" font-weight="900" fill="white">Shop<tspan fill="#FFD9DF">119</tspan></text>
+  <text x="285" y="400" font-family="Arial, sans-serif" font-size="34" font-weight="400" fill="white" opacity="0.92">Shared shopping lists, done right</text>
+</svg>

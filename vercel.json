@@ -1,5 +1,6 @@
 {
   "rewrites": [
-    { "source": "/list/:code", "destination": "/list.html" }
+    { "source": "/list/:code", "destination": "/list.html" },
+    { "source": "/join/:code", "destination": "/api/join/:code" }
   ]
 }
