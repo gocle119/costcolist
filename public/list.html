@@ -64,7 +64,10 @@
       <div id="items-container" class="items-container"></div>
 
       <div id="add-form-container">
-        <h3>Add item</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="margin-bottom:0;">Add item</h3>
+          <button id="scan-btn" class="btn btn-sm" style="background:var(--bg); color:var(--text);" type="button">📷 Scan</button>
+        </div>
         <div class="field-group">
           <label>Item name *</label>
           <input id="add-name" class="input" type="text" placeholder="e.g. Kirkland Olive Oil" maxlength="200" autocomplete="off">
@@ -139,6 +142,17 @@
     </div>
   </div>
 
+  <!-- Barcode scanner overlay -->
+  <div id="scan-overlay" class="overlay-backdrop" style="display:none;">
+    <div class="share-sheet">
+      <h3>Scan barcode</h3>
+      <div id="scan-reader" style="width:100%; border-radius:8px; overflow:hidden; background:#000;"></div>
+      <p id="scan-status" style="font-size:0.82rem; color:var(--muted); margin-top:10px; text-align:center;">Point the camera at a barcode</p>
+      <button class="btn btn-red share-close" onclick="closeScan()">Cancel</button>
+    </div>
+  </div>
+
+  <script src="/js/vendor/html5-qrcode.min.js"></script>
   <script src="/js/list.js"></script>
   <script>
     if ('serviceWorker' in navigator) {

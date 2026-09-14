@@ -923,6 +923,87 @@ async function submitAddItem() {
   }
 }
 
+// ── Barcode scan ─────────────────────────────────────────────────────────────
+const scanBtn      = document.getElementById('scan-btn');
+const scanOverlay  = document.getElementById('scan-overlay');
+const scanStatus   = document.getElementById('scan-status');
+let scanner = null;
+
+function openAddFormFor(upc) {
+  addForm.classList.add('open');
+  fab.classList.add('open');
+  addQty.value = ''; addPrice.value = ''; addNotes.value = '';
+  addItemNumber.value = upc || '';
+  addCategoryUserSet = false;
+  addError.textContent = '';
+}
+
+async function onBarcodeDecoded(upc) {
+  await stopScan();
+  closeScan();
+  scanStatus.textContent = '';
+  try {
+    const result = await api('GET', `/api/barcode/${upc}`);
+    if (result.found) {
+      openAddFormFor(upc);
+      addName.value = result.name;
+      addCategory.value = detectCategory(result.name);
+      await submitAddItem();
+    } else {
+      openAddFormFor(upc);
+      addName.value = '';
+      addName.focus();
+      showToast('Barcode not recognized — enter the item name manually.', 'info', 3500);
+    }
+  } catch (err) {
+    openAddFormFor(upc);
+    showToast('Could not look up that barcode — enter the item name manually.', 'error', 3500);
+  }
+}
+
+async function startScan() {
+  if (typeof Html5Qrcode === 'undefined') {
+    showToast('Barcode scanner failed to load.', 'error');
+    return;
+  }
+  scanOverlay.style.display = 'flex';
+  scanStatus.textContent = 'Point the camera at a barcode';
+  scanner = new Html5Qrcode('scan-reader', {
+    formatsToSupport: [
+      Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.UPC_A, Html5QrcodeSupportedFormats.UPC_E,
+      Html5QrcodeSupportedFormats.CODE_128,
+    ],
+    verbose: false,
+  });
+  try {
+    await scanner.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 260, height: 160 } },
+      (decodedText) => onBarcodeDecoded(decodedText.replace(/[^0-9]/g, '')),
+      () => {},
+    );
+  } catch (err) {
+    scanStatus.textContent = 'Could not access the camera.';
+    showToast('Camera access failed: ' + err.message, 'error', 4000);
+  }
+}
+
+async function stopScan() {
+  if (scanner) {
+    try { await scanner.stop(); scanner.clear(); } catch {}
+    scanner = null;
+  }
+}
+
+function closeScan() {
+  stopScan();
+  scanOverlay.style.display = 'none';
+}
+window.closeScan = closeScan;
+
+if (scanBtn) scanBtn.addEventListener('click', startScan);
+
 // ── Share ──────────────────────────────────────────────────────────────────────
 shareBtn.addEventListener('click', openShare);
 

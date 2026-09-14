@@ -6,6 +6,7 @@
     "@supabase/supabase-js": "^2.45.0"
   },
   "devDependencies": {
+    "html5-qrcode": "^2.3.8",
     "sharp": "^0.35.4"
   }
 }
