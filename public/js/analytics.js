@@ -1,7 +1,7 @@
 // Lightweight, privacy-friendly analytics (PostHog). Inert until POSTHOG_KEY is set —
 // get a free project + key at https://posthog.com (Project Settings -> Project API Key),
 // then fill it in below and redeploy. Until then, window.track() is a safe no-op.
-const POSTHOG_KEY = '';
+const POSTHOG_KEY = 'phc_tKgA7z4zL5yFsGBrmEufStNKeP3ACbMiHjtXoXNkXTmk';
 const POSTHOG_HOST = 'https://us.i.posthog.com';
 
 (function () {
