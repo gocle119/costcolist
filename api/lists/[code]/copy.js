@@ -1,4 +1,4 @@
-const supabase = require('../../../_supabase');
+const supabase = require('../../_supabase');
 
 const CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function generateCode() {
