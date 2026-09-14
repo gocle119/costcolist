@@ -1,4 +1,5 @@
 const supabase = require('../../../_supabase');
+const { sendToList } = require('../../../_push');
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -6,13 +7,13 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const code = (req.query.code || '').toUpperCase();
-  const { name, quantity = '1', notes = '', item_number = '', price, category = 'Other' } = req.body || {};
+  const { name, quantity = '1', notes = '', item_number = '', price, category = 'Other', subscriberEndpoint } = req.body || {};
 
   if (!name || !name.trim()) return res.status(400).json({ error: 'Item name is required' });
 
   const { data: list, error: listError } = await supabase
     .from('lists')
-    .select('id')
+    .select('id, name')
     .eq('code', code)
     .eq('archived', false)
     .single();
@@ -69,6 +70,12 @@ module.exports = async (req, res) => {
   }
 
   await supabase.from('lists').update({ updated_at: new Date().toISOString() }).eq('id', list.id);
+
+  try {
+    await sendToList(list.id, { title: list.name, body: `${item.name} added`, url: `/list/${code}` }, subscriberEndpoint);
+  } catch (err) {
+    console.error('push notify error:', err);
+  }
 
   return res.status(201).json(item);
 };

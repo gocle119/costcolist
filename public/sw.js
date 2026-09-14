@@ -1,4 +1,4 @@
-const CACHE = 'shop119-v4';
+const CACHE = 'shop119-v5';
 const STATIC = [
   '/', '/index.html', '/list.html', '/manifest.json', '/icon.svg',
   '/icon-192.png', '/icon-512.png', '/icon-maskable-512.png',
@@ -13,6 +13,31 @@ self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('push', e => {
+  let data = {};
+  try { data = e.data ? e.data.json() : {}; } catch {}
+  const title = data.title || 'Shop119';
+  e.waitUntil(self.registration.showNotification(title, {
+    body: data.body || '',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    data: { url: data.url || '/' },
+  }));
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || '/';
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const client of list) {
+        if (client.url.includes(url) && 'focus' in client) return client.focus();
+      }
+      if (clients.openWindow) return clients.openWindow(url);
+    })
   );
 });
 

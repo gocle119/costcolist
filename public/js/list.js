@@ -139,6 +139,8 @@ const overflowSelectBtn   = document.getElementById('overflow-select-btn');
 const overflowShareBtn    = document.getElementById('overflow-share-btn');
 const overflowStaplesBtn  = document.getElementById('overflow-staples-btn');
 const loadStaplesBtn      = document.getElementById('load-staples-btn');
+const notifyBtn           = document.getElementById('notify-btn');
+const overflowNotifyBtn   = document.getElementById('overflow-notify-btn');
 
 // ── Toast notifications ────────────────────────────────────────────────────────
 function showToast(msg, type = 'info', duration = 3000) {
@@ -225,7 +227,10 @@ if (overflowBtn) {
   if (overflowClearBtn)   overflowClearBtn.addEventListener('click',   () => { overflowDropdown.classList.remove('open'); clearCheckedBtn.click(); });
   if (overflowSelectBtn)  overflowSelectBtn.addEventListener('click',  () => { overflowDropdown.classList.remove('open'); enterSelectMode(); });
   if (overflowStaplesBtn) overflowStaplesBtn.addEventListener('click', () => { overflowDropdown.classList.remove('open'); loadStaplesToList(); });
+  if (overflowNotifyBtn)  overflowNotifyBtn.addEventListener('click',  () => { overflowDropdown.classList.remove('open'); toggleNotify(); });
 }
+
+if (notifyBtn) notifyBtn.addEventListener('click', toggleNotify);
 
 // ── Init ───────────────────────────────────────────────────────────────────────
 if (!listCode || listCode.length !== 6) {
@@ -282,6 +287,7 @@ function showMain(data) {
   codeBadge.style.display = 'inline-block';
   shareBtn.style.display = 'inline-flex';
   selectModeBtn.style.display = 'inline-flex';
+  if (notifyBtn) { notifyBtn.style.display = 'inline-flex'; refreshNotifyBtnLabel(); }
   if (overflowBtn) overflowBtn.style.display = '';
   // Show staples buttons if user has staples saved
   const hasStaples = getStaples().length > 0;
@@ -298,8 +304,27 @@ function showMain(data) {
     if (!exists) {
       lists.unshift({ code: data.code, name: data.name, createdAt: data.created_at });
       localStorage.setItem(key, JSON.stringify(lists.slice(0, 20)));
+      api('POST', `/api/lists/${data.code}/notify-join`).catch(() => {});
     }
   } catch {}
+}
+
+async function refreshNotifyBtnLabel() {
+  if (typeof getCurrentSubscription !== 'function') return;
+  const sub = await getCurrentSubscription().catch(() => null);
+  const label = sub ? '🔔 Notifying' : '🔔 Notify';
+  if (notifyBtn) notifyBtn.textContent = label;
+  if (overflowNotifyBtn) overflowNotifyBtn.textContent = sub ? '🔔 Turn off notifications' : '🔔 Notify me';
+}
+
+async function toggleNotify() {
+  const sub = await (typeof getCurrentSubscription === 'function' ? getCurrentSubscription().catch(() => null) : null);
+  if (sub) {
+    await disableNotifications(listCode);
+  } else {
+    await enableNotifications(listCode);
+  }
+  refreshNotifyBtnLabel();
 }
 
 function setStatus(msg) { if (msg) showToast(msg); }
@@ -899,10 +924,12 @@ async function submitAddItem() {
   addSubmitBtn.innerHTML = '<span class="spinner"></span>';
 
   try {
+    const currentSub = typeof getCurrentSubscription === 'function' ? await getCurrentSubscription().catch(() => null) : null;
     const item = await api('POST', `/api/lists/${listCode}/items/add`, {
       name, quantity: qty,
       price: price !== '' ? parseFloat(price) : undefined,
       notes, item_number: itemNum, category,
+      subscriberEndpoint: currentSub ? currentSub.endpoint : undefined,
     });
     items.push(item);
     lastUpdatedAt = null;
